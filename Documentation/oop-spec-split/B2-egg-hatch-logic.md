@@ -1,21 +1,21 @@
-# P3 · CPE Tier
+# B2 · Egg & Hatch Logic (Backend)
 
-ไข่ 3 ระดับ, สุ่มระดับไข่ตามเวลา, สุ่มสัตว์, หน้าฟักไข่
+ไข่ 3 ระดับ, ตารางโอกาสตามเวลา, ตัวสุ่ม, level, TierService, HatchService
 
-> อ่าน [00-shared.md](00-shared.md) ก่อน: กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
+> อ่าน [00-shared.md](00-shared.md) ก่อน: วิธีทำงานแบบแยกฝั่ง, กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
 
 ## สรุปงาน
 
-- **Backend (10 class):** `Egg`, `FreshmanEgg`, `SeniorEgg`, `ProfessorEgg`, `EggFactory`, `TierOddsTable`, `GachaMachine`, `PetLevelPolicy`, `TierService`, `HatchService`
-- **Frontend (3 class):** `EggOddsPanel`, `HatchAnimation`, `HatchView`
-- **method ในไฟล์ของคนอื่น:** `OwnedPet`
-- **ใช้ของใคร:** P1 (`GameStore`, `Species`, `OwnedPet`, `StudySession`), P2 (`BaseView`, `BaseWidget`, `Format`, `SoundManager`), P4 (`StudySession.can_hatch`, `mark_hatched`)
-- **ใครใช้ของเรา:** P4, P5 ใช้ `EggOddsPanel`, `TierOddsTable` · P5 เรียก `HatchService` · P6, P7 ใช้ `PetLevelPolicy`
-- **branch:** `feat/cpe-tier`
+- **ฝั่ง:** Backend อย่างเดียว · ไม่ต้อง import flet
+- **Class ที่ต้องเขียน (10):** `Egg`, `FreshmanEgg`, `SeniorEgg`, `ProfessorEgg`, `EggFactory`, `TierOddsTable`, `GachaMachine`, `PetLevelPolicy`, `TierService`, `HatchService`
+- **method ในไฟล์ของคนอื่น:** `OwnedPet` (ไฟล์ของ B1)
+- **ใช้ของใคร:** B1 (`GameStore`, `Species`, `OwnedPet`, `StudySession`) · ใช้ `StudySession.can_hatch()` / `mark_hatched()` ของ B3
+- **ใครใช้ของเรา:** B3 (`RoomService`, `SanctuaryService`, `AnalyticsService`) · F2 ผ่าน `ctx.tiers` · F4 ผ่าน `ctx.hatch`
+- **branch:** `feat/b2-egg-hatch-logic`
 
 ## Backend
 
-**Import ที่ต้องใช้ (รวมทุกไฟล์ backend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
+**Import ที่ต้องใช้ (รวมทุกไฟล์ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
 
 ```python
 from __future__ import annotations
@@ -222,105 +222,13 @@ from app.errors import InvalidStateError
 | `hatch(session_id: int, tier: EggTier \| None = None)` | `HatchResult` | tier = None → roll_tier จากเวลาของ session · ห้องกลุ่มส่ง tier มา · ไม่ READY → InvalidStateError |
 | `_give_pet(player_id: int, species: Species)` *private* | `tuple[OwnedPet, bool]` | มีแล้ว level_up / ยังไม่มีสร้างใหม่ · คืน (pet, is_new) |
 
-## Frontend
-
-**Import ที่ต้องใช้ (รวมทุกไฟล์ frontend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
-
-```python
-from __future__ import annotations
-
-from typing import Any, Callable, ClassVar, TYPE_CHECKING
-import asyncio
-
-import flet as ft
-
-from app.domain.enums import EggTier
-from app.dto import HatchResult, PetDTO, TierOdds
-from app.errors import AppError
-from ui.core.base_view import BaseView
-from ui.core.base_widget import BaseWidget
-from ui.core.format import Format
-from ui.core.widgets import PixelButton
-
-if TYPE_CHECKING:
-    from ui.core.app_context import AppContext
-```
-
-### `EggOddsPanel`
-
-- **ไฟล์:** `ui/hatch/egg_odds_panel.py`
-- **ชนิด:** class
-- **inherit:** `BaseWidget`
-- **สร้าง:** `EggOddsPanel(brackets, current_sec=0)`
-- **หน้าที่:** ตารางโอกาสได้ไข่ตามเวลา (ใช้ใน popup Setup และหน้า Focus) highlight แถวของเวลาปัจจุบัน
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-|---|---|---|---|
-| `brackets` | `list[TierOdds]` | ต้องส่งตอนสร้าง | จาก ctx.tiers.list_odds() |
-| `current_sec` | `int` | ส่งหรือไม่ก็ได้ · ถ้าไม่ส่ง = `0` | เวลาที่อ่านแล้ว |
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `build()` | `ft.Control` | ทำตาม class แม่ |
-| `set_current(duration_sec: int)` | `None` | เปลี่ยนแถวที่ highlight |
-
-### `HatchAnimation`
-
-- **ไฟล์:** `ui/hatch/hatch_animation.py`
-- **ชนิด:** class
-- **inherit:** `BaseWidget`
-- **สร้าง:** `HatchAnimation(tier, pet, stage_ms=900)`
-- **หน้าที่:** animation: ไข่ 3 ใบวนสุ่ม → หยุดที่ระดับที่ได้ → สั่น → แตก → TADA
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-|---|---|---|---|
-| `tier` | `EggTier` | ต้องส่งตอนสร้าง | ระดับที่สุ่มได้ |
-| `pet` | `PetDTO` | ต้องส่งตอนสร้าง | สัตว์ที่ได้ |
-| `STAGES` | `tuple[str, ...]` | ค่าคงที่ของ class `= ("roulette", "shake", "crack", "reveal")` | - |
-| `stage_ms` | `int` | ส่งหรือไม่ก็ได้ · ถ้าไม่ส่ง = `900` | เวลาต่อขั้น |
-| `current_stage` | `int` | สร้างใน `__init__` = `0` | - |
-| `stack` | `ft.Stack \| None` | สร้างใน `__init__` = `None` | ft.Stack ที่วางของ |
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `build()` | `ft.Control` | ทำตาม class แม่ |
-| `play(page: ft.Page, on_done: Callable[[], None])` | `None` | เล่นทีละขั้นด้วย page.run_task จบแล้ว on_done |
-| `skip()` | `None` | ข้ามไปขั้นสุดท้าย |
-
-### `HatchView`
-
-- **ไฟล์:** `ui/hatch/hatch_view.py`
-- **ชนิด:** class
-- **inherit:** `BaseView`
-- **สร้าง:** `HatchView(ctx, **params)`
-- **หน้าที่:** หน้าฟักไข่ params: session_id (อ่านเดี่ยว) หรือ room_id (กลุ่ม) · จบแล้วไป /result
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-|---|---|---|---|
-| `route` | `str` | ค่าคงที่ของ class `= "/hatch"` | path ของหน้า |
-| `results` | `list[HatchResult]` | สร้างใน `__init__` = `[]` | ผลของทุกคน (เดี่ยว = 1) |
-| `current_index` | `int` | สร้างใน `__init__` = `0` | กำลังโชว์ของคนที่เท่าไร |
-| `animation` | `HatchAnimation \| None` | สร้างใน `__init__` = `None` | animation ฟักไข่ |
-| `name_text` | `ft.Text \| None` | สร้างใน `__init__` = `None` | Congrats! {nickname} got {species} |
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `build()` | `ft.Control` | ทำตาม class แม่ |
-| `on_enter()` | `None` | session_id → ctx.hatch.hatch · room_id → ctx.rooms.hatch แล้ว play_current |
-| `play_current()` | `None` | เล่น animation ของคนที่ current_index + sound.play("tada") |
-| `next()` | `None` | คนถัดไป ถ้าหมดแล้ว go_result |
-| `go_result()` | `None` | ไป /result พร้อม session_id หรือ room_id |
-
 ## Method ที่ต้องเขียนในไฟล์ของคนอื่น
 
-ตัวแปรของ class เหล่านี้ P1 สร้างไว้แล้ว ให้เพิ่มเฉพาะ method ข้างล่าง
+ตัวแปรของ class เหล่านี้ B1 สร้างไว้แล้ว ให้เพิ่มเฉพาะ method ข้างล่าง
 
 ### `OwnedPet`
 
-- **ไฟล์:** `app/domain/owned_pet.py`
-- **ชนิด:** class
-- **inherit:** ไม่มี
-- **หน้าที่:** สัตว์ที่ผู้เล่นมี หนึ่งคนมีแต่ละชนิดได้ตัวเดียว ได้ซ้ำ = level up · P1 สร้างตัวแปร + to_dict/from_dict · P3 เขียน method ที่เหลือ
+- **ไฟล์:** `app/domain/owned_pet.py` (ของ B1)
 
 | method | return | ทำอะไร |
 |---|---|---|

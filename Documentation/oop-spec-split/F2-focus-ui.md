@@ -1,61 +1,20 @@
-# P4 · Study Timer
+# F2 · Focus UI (Frontend)
 
-การอ่านเดี่ยว, นาฬิกา, หน้า Focus, CPEGO bubble
+popup ใส่วิชา, หน้า Focus, นาฬิกา, CPEGO, ตารางโอกาสไข่
 
-> อ่าน [00-shared.md](00-shared.md) ก่อน: กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
+> อ่าน [00-shared.md](00-shared.md) ก่อน: วิธีทำงานแบบแยกฝั่ง, กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
 
 ## สรุปงาน
 
-- **Backend (1 class):** `FocusSessionService`
-- **Frontend (7 class):** `StopwatchTimer`, `CpegoMessage`, `CpegoBot`, `CpegoBubble`, `EggView`, `SetupPopup`, `FocusView`
-- **method ในไฟล์ของคนอื่น:** `StudySession`
-- **ใช้ของใคร:** P1 (`GameStore`, `Clock`, `StudySession`), P2 (`BaseView`, `BaseWidget`, `Popup`, `ConfirmDialog`, `Format`), P3 (`TierOddsTable`, `EggOddsPanel`)
-- **ใครใช้ของเรา:** P5 ใช้ `StopwatchTimer`, `CpegoBot`, `CpegoBubble` ในห้องกลุ่ม · P6 เปิด `SetupPopup` จาก Lobby · P3 ใช้ `can_hatch()`, `mark_hatched()`
-- **branch:** `feat/study-timer`
-
-## Backend
-
-**Import ที่ต้องใช้ (รวมทุกไฟล์ backend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
-
-```python
-from __future__ import annotations
-
-from app.config import Settings
-from app.core.clock import Clock
-from app.data.game_store import GameStore
-from app.domain.enums import SessionStatus
-from app.domain.study_session import StudySession
-from app.domain.tier_odds_table import TierOddsTable
-from app.dto import SessionDTO, StopResult
-from app.errors import InvalidStateError, ValidationError
-```
-
-### `FocusSessionService`
-
-- **ไฟล์:** `app/services/focus_service.py`
-- **ชนิด:** class
-- **inherit:** ไม่มี
-- **สร้าง:** `FocusSessionService(store, clock, settings)`
-- **หน้าที่:** เริ่ม / ดูเวลา / หยุด การอ่านเดี่ยว
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-|---|---|---|---|
-| `store` | `GameStore` | ต้องส่งตอนสร้าง | ที่เก็บข้อมูลกลาง |
-| `clock` | `Clock` | ต้องส่งตอนสร้าง | นาฬิกากลาง |
-| `settings` | `Settings` | ต้องส่งตอนสร้าง | ค่าตั้งค่า |
-| `odds_table` | `TierOddsTable` | สร้างใน `__init__` = `TierOddsTable()` | ตารางโอกาสไข่ตามเวลา |
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `start(player_id: int, subject: str, room_id: int \| None = None)` | `SessionDTO` | subject ว่าง → ValidationError(field="subject") · ผู้เล่นมี RUNNING อยู่ → InvalidStateError · save() |
-| `get_running(player_id: int)` | `SessionDTO \| None` | รอบที่ค้างอยู่ |
-| `elapsed(session_id: int)` | `int` | clock.elapsed_sec(started_at) |
-| `stop(session_id: int)` | `StopResult` | session.stop(...) · tier_odds จาก odds_table · save() |
-| `recent_subjects(player_id: int, limit: int = 5)` | `list[str]` | วิชาที่อ่านล่าสุด ไม่ซ้ำ |
+- **ฝั่ง:** Frontend อย่างเดียว · เรียก backend ผ่าน `ctx.<service>` เท่านั้น
+- **Class ที่ต้องเขียน (8):** `EggOddsPanel`, `StopwatchTimer`, `CpegoMessage`, `CpegoBot`, `CpegoBubble`, `EggView`, `SetupPopup`, `FocusView`
+- **ใช้ของใคร:** F1 (ของกลางหน้าจอ) · เรียก `ctx.focus` (B3), `ctx.tiers` (B2)
+- **ใครใช้ของเรา:** F3 ใช้นาฬิกา, CPEGO, ตารางโอกาสในห้องกลุ่ม · F4 เปิด `SetupPopup` จาก Lobby
+- **branch:** `feat/f2-focus-ui`
 
 ## Frontend
 
-**Import ที่ต้องใช้ (รวมทุกไฟล์ frontend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
+**Import ที่ต้องใช้ (รวมทุกไฟล์ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
 
 ```python
 from __future__ import annotations
@@ -75,11 +34,28 @@ from ui.core.base_view import BaseView
 from ui.core.base_widget import BaseWidget
 from ui.core.format import Format
 from ui.core.widgets import ConfirmDialog, PixelButton, Popup
-from ui.hatch.egg_odds_panel import EggOddsPanel
 
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
 ```
+
+### `EggOddsPanel`
+
+- **ไฟล์:** `ui/hatch/egg_odds_panel.py`
+- **ชนิด:** class
+- **inherit:** `BaseWidget`
+- **สร้าง:** `EggOddsPanel(brackets, current_sec=0)`
+- **หน้าที่:** ตารางโอกาสได้ไข่ตามเวลา (ใช้ใน popup Setup และหน้า Focus) highlight แถวของเวลาปัจจุบัน
+
+| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
+|---|---|---|---|
+| `brackets` | `list[TierOdds]` | ต้องส่งตอนสร้าง | จาก ctx.tiers.list_odds() |
+| `current_sec` | `int` | ส่งหรือไม่ก็ได้ · ถ้าไม่ส่ง = `0` | เวลาที่อ่านแล้ว |
+
+| method | return | ทำอะไร |
+|---|---|---|
+| `build()` | `ft.Control` | ทำตาม class แม่ |
+| `set_current(duration_sec: int)` | `None` | เปลี่ยนแถวที่ highlight |
 
 ### `StopwatchTimer`
 
@@ -191,7 +167,7 @@ if TYPE_CHECKING:
 | `on_back` | `Callable[[], None]` | ต้องส่งตอนสร้าง | กด BACK |
 | `subject_field` | `ft.TextField \| None` | สร้างใน `__init__` = `None` | ช่องชื่อวิชา |
 | `error_text` | `ft.Text \| None` | สร้างใน `__init__` = `None` | ข้อความเตือนสีแดง |
-| `odds_panel` | `EggOddsPanel \| None` | สร้างใน `__init__` = `None` | P3 |
+| `odds_panel` | `EggOddsPanel \| None` | สร้างใน `__init__` = `None` | F2 |
 
 | method | return | ทำอะไร |
 |---|---|---|
@@ -211,12 +187,12 @@ if TYPE_CHECKING:
 |---|---|---|---|
 | `route` | `str` | ค่าคงที่ของ class `= "/focus"` | path ของหน้า |
 | `session` | `SessionDTO \| None` | สร้างใน `__init__` = `None` | params["session_id"] |
-| `timer` | `StopwatchTimer \| None` | สร้างใน `__init__` = `None` | นาฬิกา (P4) |
+| `timer` | `StopwatchTimer \| None` | สร้างใน `__init__` = `None` | นาฬิกา (F2) |
 | `time_text` | `ft.Text \| None` | สร้างใน `__init__` = `None` | ข้อความเวลา 67:07 |
 | `egg_view` | `EggView \| None` | สร้างใน `__init__` = `None` | รูปไข่ |
-| `odds_panel` | `EggOddsPanel \| None` | สร้างใน `__init__` = `None` | P3 |
-| `bot` | `CpegoBot \| None` | สร้างใน `__init__` = `None` | CPEGO bot (P4) |
-| `bubble` | `CpegoBubble \| None` | สร้างใน `__init__` = `None` | CPEGO bubble (P4) |
+| `odds_panel` | `EggOddsPanel \| None` | สร้างใน `__init__` = `None` | F2 |
+| `bot` | `CpegoBot \| None` | สร้างใน `__init__` = `None` | CPEGO bot (F2) |
+| `bubble` | `CpegoBubble \| None` | สร้างใน `__init__` = `None` | CPEGO bubble (F2) |
 | `confirm` | `ConfirmDialog \| None` | สร้างใน `__init__` = `None` | Are you sure to stop? |
 
 | method | return | ทำอะไร |
@@ -228,32 +204,11 @@ if TYPE_CHECKING:
 | `ask_stop()` | `None` | เปิด ConfirmDialog |
 | `confirm_stop()` | `None` | ctx.focus.stop · FAILED → /result · READY_TO_HATCH → /hatch (session_id) |
 
-## Method ที่ต้องเขียนในไฟล์ของคนอื่น
-
-ตัวแปรของ class เหล่านี้ P1 สร้างไว้แล้ว ให้เพิ่มเฉพาะ method ข้างล่าง
-
-### `StudySession`
-
-- **ไฟล์:** `app/domain/study_session.py`
-- **ชนิด:** class
-- **inherit:** ไม่มี
-- **หน้าที่:** การอ่านหนึ่งรอบของผู้เล่นหนึ่งคน · P1 สร้างตัวแปร + to_dict/from_dict · P4 เขียน method ที่เหลือ (เปลี่ยน status ผ่าน method เท่านั้น)
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `stop(ended_at: datetime, duration_sec: int, min_success_sec: int)` | `SessionStatus` | บันทึกเวลา แล้วเปลี่ยนเป็น FAILED หรือ READY_TO_HATCH · ไม่ได้ RUNNING → InvalidStateError |
-| `can_hatch()` | `bool` | True ถ้า READY_TO_HATCH |
-| `mark_hatched(tier: EggTier, species_code: str)` | `None` | บันทึกไข่ + สัตว์ แล้วเปลี่ยนเป็น HATCHED · ไม่ได้ READY_TO_HATCH → InvalidStateError |
-| `is_running()` | `bool` | True ถ้า RUNNING |
-| `is_success()` | `bool` | True ถ้า HATCHED |
-| `to_dto()` | `SessionDTO` | แปลงเป็น SessionDTO |
-
 ## เช็กลิสต์ก่อนส่ง PR
 
-- [ ] start ชื่อวิชาว่าง → ValidationError
-- [ ] start ตอนมี RUNNING อยู่ → InvalidStateError
-- [ ] stop ก่อน 15 นาที → FAILED, tier_odds ว่าง
-- [ ] stop หลัง 30 นาที → READY_TO_HATCH, tier_odds = 55/35/10
-- [ ] CpegoBot.check พูดครั้งเดียวต่อช่วง
+- [ ] กด START ไม่ใส่วิชา → error_text ขึ้นสีแดง
+- [ ] นาฬิกาเดิน และ CPEGO พูดครั้งเดียวต่อช่วงเวลา
+- [ ] STOP ก่อน 15 นาที → ไป /result · หลัง 15 นาที → ไป /hatch
+- [ ] ออกจากหน้า Focus แล้ว timer หยุด
 - [ ] ชื่อ class, ตัวแปร, method, parameter ตรงกับเอกสารนี้ทุกตัว
 - [ ] ไม่มี `print`, ไม่มีบรรทัด comment, มี type hint ครบ
