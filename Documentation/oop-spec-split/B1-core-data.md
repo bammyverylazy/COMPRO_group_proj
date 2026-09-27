@@ -1,20 +1,20 @@
-# P1 · Core Data
+# B1 · Core Data (Backend)
 
-Settings, Clock, model, ที่เก็บข้อมูล JSON, ผู้เล่น
+Settings, Clock, model, ที่เก็บข้อมูล save.json, ผู้เล่น
 
-> อ่าน [00-shared.md](00-shared.md) ก่อน: กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
+> อ่าน [00-shared.md](00-shared.md) ก่อน: วิธีทำงานแบบแยกฝั่ง, กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
 
 ## สรุปงาน
 
-- **Backend (17 class):** `Settings`, `Clock`, `Player`, `Species`, `StudySession`, `OwnedPet`, `GroupRoom`, `BaseRepository`, `PlayerRepository`, `SpeciesRepository`, `SessionRepository`, `PetRepository`, `RoomRepository`, `SaveFile`, `SpeciesLoader`, `GameStore`, `PlayerService`
-- **Frontend (0 class):** ไม่มี
-- **ใช้ของใคร:** ไม่มี · ต้องเสร็จก่อน เพราะทุก service ใช้ GameStore, Clock, model และ DTO
+- **ฝั่ง:** Backend อย่างเดียว · ไม่ต้อง import flet
+- **Class ที่ต้องเขียน (17):** `Settings`, `Clock`, `Player`, `Species`, `StudySession`, `OwnedPet`, `GroupRoom`, `BaseRepository`, `PlayerRepository`, `SpeciesRepository`, `SessionRepository`, `PetRepository`, `RoomRepository`, `SaveFile`, `SpeciesLoader`, `GameStore`, `PlayerService`
+- **ใช้ของใคร:** ไม่มี · ต้องเสร็จก่อน เพราะ B2, B3 ใช้ model และ GameStore · frontend ทุกคนใช้ DTO
 - **ใครใช้ของเรา:** ทุกคน
-- **branch:** `feat/core-data`
+- **branch:** `feat/b1-core-data`
 
 ## Backend
 
-**Import ที่ต้องใช้ (รวมทุกไฟล์ backend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
+**Import ที่ต้องใช้ (รวมทุกไฟล์ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
 
 ```python
 from __future__ import annotations
@@ -113,7 +113,7 @@ from app.errors import AppError, InvalidStateError, NotFoundError, ValidationErr
 - **ชนิด:** class
 - **inherit:** ไม่มี
 - **สร้าง:** `StudySession(id, player_id, subject, started_at, room_id=None)`
-- **หน้าที่:** การอ่านหนึ่งรอบของผู้เล่นหนึ่งคน · P1 สร้างตัวแปร + to_dict/from_dict · P4 เขียน method ที่เหลือ (เปลี่ยน status ผ่าน method เท่านั้น)
+- **หน้าที่:** การอ่านหนึ่งรอบของผู้เล่นหนึ่งคน · B1 สร้างตัวแปร + to_dict/from_dict · B3 เขียน method ที่เหลือ (เปลี่ยน status ผ่าน method เท่านั้น)
 
 | ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
 |---|---|---|---|
@@ -145,7 +145,7 @@ from app.errors import AppError, InvalidStateError, NotFoundError, ValidationErr
 - **ชนิด:** class
 - **inherit:** ไม่มี
 - **สร้าง:** `OwnedPet(player_id, species_code, hatched_at, level=1, times_hatched=1)`
-- **หน้าที่:** สัตว์ที่ผู้เล่นมี หนึ่งคนมีแต่ละชนิดได้ตัวเดียว ได้ซ้ำ = level up · P1 สร้างตัวแปร + to_dict/from_dict · P3 เขียน method ที่เหลือ
+- **หน้าที่:** สัตว์ที่ผู้เล่นมี หนึ่งคนมีแต่ละชนิดได้ตัวเดียว ได้ซ้ำ = level up · B1 สร้างตัวแปร + to_dict/from_dict · B2 เขียน method ที่เหลือ
 
 | ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
 |---|---|---|---|
@@ -169,7 +169,7 @@ from app.errors import AppError, InvalidStateError, NotFoundError, ValidationErr
 - **ชนิด:** class
 - **inherit:** ไม่มี
 - **สร้าง:** `GroupRoom(id, subject, member_ids, session_ids, started_at)`
-- **หน้าที่:** ห้องอ่านกลุ่ม · P1 สร้างตัวแปร + to_dict/from_dict · P5 เขียน method ที่เหลือ
+- **หน้าที่:** ห้องอ่านกลุ่ม · B1 สร้างตัวแปร + to_dict/from_dict · B3 เขียน method ที่เหลือ
 
 | ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
 |---|---|---|---|

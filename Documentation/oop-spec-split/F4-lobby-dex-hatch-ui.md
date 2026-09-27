@@ -1,70 +1,20 @@
-# P6 · Sanctuary + Dex
+# F4 · Lobby, Dex + Hatch UI (Frontend)
 
-ห้องภาคที่สัตว์เดินไปมา, สมุดสะสม CPE Dex
+หน้า Lobby สัตว์เดิน, หน้า Dex, หน้าฟักไข่ + animation
 
-> อ่าน [00-shared.md](00-shared.md) ก่อน: กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
+> อ่าน [00-shared.md](00-shared.md) ก่อน: วิธีทำงานแบบแยกฝั่ง, กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
 
 ## สรุปงาน
 
-- **Backend (2 class):** `SanctuaryService`, `DexService`
-- **Frontend (6 class):** `PetSprite`, `SanctuaryScene`, `LobbyView`, `DexCard`, `DexDetailPanel`, `DexView`
-- **ใช้ของใคร:** P1 (`GameStore`), P2 (ของกลางหน้าจอ, `HowToPopup`, `StatTile`), P3 (`PetLevelPolicy`, `OwnedPet.to_dto`), P4 (`SetupPopup`)
-- **ใครใช้ของเรา:** หน้า Lobby เป็นหน้าที่ทุกหน้ากลับมา
-- **branch:** `feat/sanctuary-dex`
-
-## Backend
-
-**Import ที่ต้องใช้ (รวมทุกไฟล์ backend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
-
-```python
-from __future__ import annotations
-
-from app.data.game_store import GameStore
-from app.domain.enums import EggTier, Rarity
-from app.domain.pet_policy import PetLevelPolicy
-from app.dto import DexEntry, PetDTO
-from app.errors import NotFoundError
-```
-
-### `SanctuaryService`
-
-- **ไฟล์:** `app/services/sanctuary_service.py`
-- **ชนิด:** class
-- **inherit:** ไม่มี
-- **สร้าง:** `SanctuaryService(store)`
-- **หน้าที่:** สัตว์ของผู้เล่นไปโชว์ในห้องภาค
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-|---|---|---|---|
-| `store` | `GameStore` | ต้องส่งตอนสร้าง | ที่เก็บข้อมูลกลาง |
-| `policy` | `PetLevelPolicy` | สร้างใน `__init__` = `PetLevelPolicy()` | P3 |
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `list_pets(player_id: int)` | `list[PetDTO]` | ทุกตัว + level + scale |
-| `count_pets(player_id: int)` | `int` | จำนวนชนิดที่มี |
-
-### `DexService`
-
-- **ไฟล์:** `app/services/dex_service.py`
-- **ชนิด:** class
-- **inherit:** ไม่มี
-- **สร้าง:** `DexService(store)`
-- **หน้าที่:** ข้อมูล CPE Dex: ทุกชนิด พร้อมบอกว่าปลดล็อกหรือยัง
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-|---|---|---|---|
-| `store` | `GameStore` | ต้องส่งตอนสร้าง | ที่เก็บข้อมูลกลาง |
-
-| method | return | ทำอะไร |
-|---|---|---|
-| `list_entries(player_id: int)` | `list[DexEntry]` | ทุกชนิด เรียง tier แล้ว rarity |
-| `get_entry(player_id: int, species_code: str)` | `DexEntry` | หนึ่งชนิด + subjects จาก session ที่ได้ตัวนี้ |
-| `completion(player_id: int)` | `float` | ชนิดที่ปลดล็อก / ทั้งหมด |
+- **ฝั่ง:** Frontend อย่างเดียว · เรียก backend ผ่าน `ctx.<service>` เท่านั้น
+- **Class ที่ต้องเขียน (8):** `HatchAnimation`, `HatchView`, `PetSprite`, `SanctuaryScene`, `LobbyView`, `DexCard`, `DexDetailPanel`, `DexView`
+- **ใช้ของใคร:** F1 (ของกลางหน้าจอ, `HowToPopup`) · F2 (`SetupPopup`) · เรียก `ctx.sanctuary`, `ctx.dex`, `ctx.hatch`, `ctx.rooms.hatch`, `ctx.focus.get_running`
+- **ใครใช้ของเรา:** หน้า Lobby เป็นหน้าที่ทุกหน้ากลับมา · Focus (F2) และ Room (F3) ส่งมาหน้าฟักไข่
+- **branch:** `feat/f4-lobby-dex-hatch-ui`
 
 ## Frontend
 
-**Import ที่ต้องใช้ (รวมทุกไฟล์ frontend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
+**Import ที่ต้องใช้ (รวมทุกไฟล์ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
 
 ```python
 from __future__ import annotations
@@ -75,7 +25,9 @@ import random
 
 import flet as ft
 
-from app.dto import DexEntry, PetDTO, SessionDTO
+from app.domain.enums import EggTier
+from app.dto import DexEntry, HatchResult, PetDTO, SessionDTO
+from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.base_widget import BaseWidget
 from ui.core.format import Format
@@ -86,6 +38,53 @@ from ui.landing.howto_popup import HowToPopup
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
 ```
+
+### `HatchAnimation`
+
+- **ไฟล์:** `ui/hatch/hatch_animation.py`
+- **ชนิด:** class
+- **inherit:** `BaseWidget`
+- **สร้าง:** `HatchAnimation(tier, pet, stage_ms=900)`
+- **หน้าที่:** animation: ไข่ 3 ใบวนสุ่ม → หยุดที่ระดับที่ได้ → สั่น → แตก → TADA
+
+| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
+|---|---|---|---|
+| `tier` | `EggTier` | ต้องส่งตอนสร้าง | ระดับที่สุ่มได้ |
+| `pet` | `PetDTO` | ต้องส่งตอนสร้าง | สัตว์ที่ได้ |
+| `STAGES` | `tuple[str, ...]` | ค่าคงที่ของ class `= ("roulette", "shake", "crack", "reveal")` | - |
+| `stage_ms` | `int` | ส่งหรือไม่ก็ได้ · ถ้าไม่ส่ง = `900` | เวลาต่อขั้น |
+| `current_stage` | `int` | สร้างใน `__init__` = `0` | - |
+| `stack` | `ft.Stack \| None` | สร้างใน `__init__` = `None` | ft.Stack ที่วางของ |
+
+| method | return | ทำอะไร |
+|---|---|---|
+| `build()` | `ft.Control` | ทำตาม class แม่ |
+| `play(page: ft.Page, on_done: Callable[[], None])` | `None` | เล่นทีละขั้นด้วย page.run_task จบแล้ว on_done |
+| `skip()` | `None` | ข้ามไปขั้นสุดท้าย |
+
+### `HatchView`
+
+- **ไฟล์:** `ui/hatch/hatch_view.py`
+- **ชนิด:** class
+- **inherit:** `BaseView`
+- **สร้าง:** `HatchView(ctx, **params)`
+- **หน้าที่:** หน้าฟักไข่ params: session_id (อ่านเดี่ยว) หรือ room_id (กลุ่ม) · จบแล้วไป /result
+
+| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
+|---|---|---|---|
+| `route` | `str` | ค่าคงที่ของ class `= "/hatch"` | path ของหน้า |
+| `results` | `list[HatchResult]` | สร้างใน `__init__` = `[]` | ผลของทุกคน (เดี่ยว = 1) |
+| `current_index` | `int` | สร้างใน `__init__` = `0` | กำลังโชว์ของคนที่เท่าไร |
+| `animation` | `HatchAnimation \| None` | สร้างใน `__init__` = `None` | animation ฟักไข่ |
+| `name_text` | `ft.Text \| None` | สร้างใน `__init__` = `None` | Congrats! {nickname} got {species} |
+
+| method | return | ทำอะไร |
+|---|---|---|
+| `build()` | `ft.Control` | ทำตาม class แม่ |
+| `on_enter()` | `None` | session_id → ctx.hatch.hatch · room_id → ctx.rooms.hatch แล้ว play_current |
+| `play_current()` | `None` | เล่น animation ของคนที่ current_index + sound.play("tada") |
+| `next()` | `None` | คนถัดไป ถ้าหมดแล้ว go_result |
+| `go_result()` | `None` | ไป /result พร้อม session_id หรือ room_id |
 
 ### `PetSprite`
 
@@ -153,8 +152,8 @@ if TYPE_CHECKING:
 |---|---|---|---|
 | `route` | `str` | ค่าคงที่ของ class `= "/lobby"` | path ของหน้า |
 | `scene` | `SanctuaryScene \| None` | สร้างใน `__init__` = `None` | ฉากห้องภาค |
-| `setup` | `SetupPopup \| None` | สร้างใน `__init__` = `None` | P4 |
-| `howto` | `HowToPopup \| None` | สร้างใน `__init__` = `None` | P2 |
+| `setup` | `SetupPopup \| None` | สร้างใน `__init__` = `None` | F2 |
+| `howto` | `HowToPopup \| None` | สร้างใน `__init__` = `None` | F1 |
 
 | method | return | ทำอะไร |
 |---|---|---|
@@ -229,9 +228,9 @@ if TYPE_CHECKING:
 
 ## เช็กลิสต์ก่อนส่ง PR
 
-- [ ] list_pets ผู้เล่นที่ยังไม่มีสัตว์ → []
-- [ ] list_entries ครบทุกชนิดใน species.json
-- [ ] completion ถูกต้องเมื่อมี 3 จาก 12 → 0.25
-- [ ] get_entry ได้ subjects ไม่ซ้ำ
+- [ ] ห้องว่างโชว์ข้อความชวนเริ่มอ่าน
+- [ ] สัตว์ level สูงตัวใหญ่ขึ้น และเดินไม่ออกนอกห้อง
+- [ ] Dex ตัวที่ยังไม่ได้เป็นเงาดำ
+- [ ] หน้าฟักไข่ห้องกลุ่มเล่นครบทุกคนแล้วไป /result
 - [ ] ชื่อ class, ตัวแปร, method, parameter ตรงกับเอกสารนี้ทุกตัว
 - [ ] ไม่มี `print`, ไม่มีบรรทัด comment, มี type hint ครบ

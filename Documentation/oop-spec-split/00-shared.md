@@ -1,32 +1,40 @@
-# 00 · ของกลาง (ทุกคนอ่านก่อน)
+# 00 · ของกลาง (ทุกคนอ่านก่อน) · แบบแยกฝั่ง
 
 CPE Egg Hatch · Python OOP · Frontend = Flet · Backend = class Python ในโปรแกรมเดียวกัน · เก็บข้อมูลเป็น `save.json` · รันบนเครื่องเดียว
 
 ## Feature ที่ทำ
 
-| # | Feature | ทำอะไร | เจ้าของ |
-|---|---|---|---|
-| 1 | CPE Tier | ไข่ 3 ระดับ ยิ่งอ่านนานยิ่งมีสิทธิ์ลุ้นไข่สูง แต่ไม่การันตี | P3 |
-| 2 | Study Timer | จับเวลาอ่านเดี่ยว นับขึ้น CPEGO แจ้งเมื่อเข้าช่วงโอกาสใหม่ | P4 |
-| 3 | Shared Fate | อ่านกลุ่ม 2–6 คนบนเครื่องเดียว ชะตาเดียวกัน | P5 |
-| 4 | Department Sanctuary | สัตว์ที่ได้เดินไปมาในห้องภาค ตัวซ้ำ = level ขึ้น ตัวใหญ่ขึ้น | P6 |
-| 5 | CPE Dex | สมุดสะสมสัตว์ทุกชนิด ปลดล็อกแล้ว/ยัง + วิชาที่อ่าน | P6 |
-| 6 | Analytics | สรุปผลรายรอบ + ประวัติ + สถิติรวม | P7 |
-| – | Core | ข้อมูล, ที่เก็บ, ผู้เล่น (P1) · โครงหน้าจอ, หน้า Landing (P2) | P1, P2 |
+| # | Feature | ทำอะไร | Backend | Frontend |
+|---|---|---|---|---|
+| 1 | CPE Tier | ไข่ 3 ระดับ ยิ่งอ่านนานยิ่งมีสิทธิ์ลุ้นไข่สูง แต่ไม่การันตี | B2 | F2 (ตารางโอกาส), F4 (หน้าฟักไข่) |
+| 2 | Study Timer | จับเวลาอ่านเดี่ยว นับขึ้น CPEGO แจ้งเมื่อเข้าช่วงโอกาสใหม่ | B3 | F2 |
+| 3 | Shared Fate | อ่านกลุ่ม 2–6 คนบนเครื่องเดียว ชะตาเดียวกัน | B3 | F3 |
+| 4 | Department Sanctuary | สัตว์ที่ได้เดินไปมาในห้องภาค ตัวซ้ำ = level ขึ้น ตัวใหญ่ขึ้น | B3 | F4 |
+| 5 | CPE Dex | สมุดสะสมสัตว์ทุกชนิด ปลดล็อกแล้ว/ยัง + วิชาที่อ่าน | B3 | F4 |
+| 6 | Analytics | สรุปผลรายรอบ + ประวัติ + สถิติรวม | B3 | F3 |
+| – | Core | ข้อมูล, ที่เก็บ, ผู้เล่น · โครงหน้าจอ, หน้า Landing | B1 | F1 |
 
 ไม่ทำ: Egg Crack, Tab Detection, BGM, login/รหัสผ่าน (ใช้แค่ชื่อเล่น)
 
 ## ใครทำอะไร
 
-| คน | Feature | Backend (`app/`) | Frontend (`ui/`) | ไฟล์ |
+| คน | ฝั่ง | งาน | Class | ไฟล์ |
 |---|---|---|---|---|
-| P1 | Core Data | `Settings`, `Clock`, `Player`, `Species`, `StudySession`, `OwnedPet`, `GroupRoom`, `BaseRepository`, `PlayerRepository`, `SpeciesRepository`, `SessionRepository`, `PetRepository`, `RoomRepository`, `SaveFile`, `SpeciesLoader`, `GameStore`, `PlayerService` | – | [P1-core-data.md](P1-core-data.md) |
-| P2 | Frontend Core | – | `BaseWidget`, `BaseView`, `Navigator`, `AppContext`, `Theme`, `SoundManager`, `PixelButton`, `Popup`, `ConfirmDialog`, `StatTile`, `Format`, `HowToSlide`, `HowToPopup`, `PlayerPicker`, `LandingView` | [P2-frontend-core.md](P2-frontend-core.md) |
-| P3 | CPE Tier | `Egg`, `FreshmanEgg`, `SeniorEgg`, `ProfessorEgg`, `EggFactory`, `TierOddsTable`, `GachaMachine`, `PetLevelPolicy`, `TierService`, `HatchService` | `EggOddsPanel`, `HatchAnimation`, `HatchView` | [P3-cpe-tier.md](P3-cpe-tier.md) |
-| P4 | Study Timer | `FocusSessionService` | `StopwatchTimer`, `CpegoMessage`, `CpegoBot`, `CpegoBubble`, `EggView`, `SetupPopup`, `FocusView` | [P4-study-timer.md](P4-study-timer.md) |
-| P5 | Shared Fate | `RoomService` | `MemberPicker`, `RoomSetupView`, `MemberList`, `RoomFocusView` | [P5-shared-fate.md](P5-shared-fate.md) |
-| P6 | Sanctuary + Dex | `SanctuaryService`, `DexService` | `PetSprite`, `SanctuaryScene`, `LobbyView`, `DexCard`, `DexDetailPanel`, `DexView` | [P6-sanctuary-dex.md](P6-sanctuary-dex.md) |
-| P7 | Analytics | `StatsCalculator`, `AnalyticsService` | `ResultCard`, `ResultView`, `BarChart`, `HistoryView` | [P7-analytics.md](P7-analytics.md) |
+| B1 | Backend | Core Data | `Settings`, `Clock`, `Player`, `Species`, `StudySession`, `OwnedPet`, `GroupRoom`, `BaseRepository`, `PlayerRepository`, `SpeciesRepository`, `SessionRepository`, `PetRepository`, `RoomRepository`, `SaveFile`, `SpeciesLoader`, `GameStore`, `PlayerService` | [B1-core-data.md](B1-core-data.md) |
+| B2 | Backend | Egg & Hatch Logic | `Egg`, `FreshmanEgg`, `SeniorEgg`, `ProfessorEgg`, `EggFactory`, `TierOddsTable`, `GachaMachine`, `PetLevelPolicy`, `TierService`, `HatchService` | [B2-egg-hatch-logic.md](B2-egg-hatch-logic.md) |
+| B3 | Backend | Session, Room & Stats | `FocusSessionService`, `RoomService`, `SanctuaryService`, `DexService`, `StatsCalculator`, `AnalyticsService` | [B3-session-room-stats.md](B3-session-room-stats.md) |
+| F1 | Frontend | UI Core + Landing | `BaseWidget`, `BaseView`, `Navigator`, `AppContext`, `Theme`, `SoundManager`, `PixelButton`, `Popup`, `ConfirmDialog`, `StatTile`, `Format`, `HowToSlide`, `HowToPopup`, `PlayerPicker`, `LandingView` | [F1-ui-core-landing.md](F1-ui-core-landing.md) |
+| F2 | Frontend | Focus UI | `EggOddsPanel`, `StopwatchTimer`, `CpegoMessage`, `CpegoBot`, `CpegoBubble`, `EggView`, `SetupPopup`, `FocusView` | [F2-focus-ui.md](F2-focus-ui.md) |
+| F3 | Frontend | Room + Result UI | `MemberPicker`, `RoomSetupView`, `MemberList`, `RoomFocusView`, `ResultCard`, `ResultView`, `BarChart`, `HistoryView` | [F3-room-result-ui.md](F3-room-result-ui.md) |
+| F4 | Frontend | Lobby, Dex + Hatch UI | `HatchAnimation`, `HatchView`, `PetSprite`, `SanctuaryScene`, `LobbyView`, `DexCard`, `DexDetailPanel`, `DexView` | [F4-lobby-dex-hatch-ui.md](F4-lobby-dex-hatch-ui.md) |
+
+## ทำงานแบบแยกฝั่งยังไงไม่ให้รอกัน
+
+- **สัญญากลางคือ DTO กับชื่อ method ของ service** (ตารางในไฟล์ B1–B3) ฝั่ง frontend เขียนหน้าจอตามสัญญานี้ได้เลยโดยไม่ต้องรอ backend
+- **ช่วงแรก frontend ใช้ service ปลอม:** เขียน class ที่มีชื่อ method เดียวกันแต่คืน DTO ตายตัว แล้วใส่แทนใน `AppContext` ชั่วคราว พอ backend เสร็จเปลี่ยนกลับบรรทัดเดียว
+- **backend เทสต์ด้วย pytest อย่างเดียว** ไม่ต้องเปิดหน้าจอ
+- **ถ้าจะเปลี่ยน field ของ DTO หรือ parameter ของ method** ต้องบอกทั้งคนทำ backend และ frontend ที่เกี่ยวข้องก่อน (ดูคอลัมน์ "ใครใช้ของเรา")
+- **B1 กับ F1 ต้องเสร็จก่อนคนอื่น** B1: model + `GameStore` + DTO · F1: `AppContext` + `Navigator` + `BaseView` + widget กลาง
 
 ## กติกาไข่
 
@@ -63,15 +71,15 @@ CPE Egg Hatch · Python OOP · Frontend = Flet · Backend = class Python ใน�
 
 | route | หน้า | class | เจ้าของ | params |
 |---|---|---|---|---|
-| `/` | Landing (เลือก/สร้างผู้เล่น) | `LandingView` | P2 | – |
-| `/lobby` | ห้องภาค | `LobbyView` | P6 | – |
-| `/focus` | อ่านเดี่ยว | `FocusView` | P4 | `session_id` |
-| `/room/setup` | ตั้งห้องกลุ่ม | `RoomSetupView` | P5 | – |
-| `/room` | อ่านกลุ่ม | `RoomFocusView` | P5 | `room_id` |
-| `/hatch` | ฟักไข่ | `HatchView` | P3 | `session_id` หรือ `room_id` |
-| `/result` | สรุปผล | `ResultView` | P7 | `session_id` หรือ `room_id` |
-| `/dex` | CPE Dex | `DexView` | P6 | – |
-| `/history` | ประวัติ + สถิติ | `HistoryView` | P7 | – |
+| `/` | Landing (เลือก/สร้างผู้เล่น) | `LandingView` | F1 | – |
+| `/lobby` | ห้องภาค | `LobbyView` | F4 | – |
+| `/focus` | อ่านเดี่ยว | `FocusView` | F2 | `session_id` |
+| `/room/setup` | ตั้งห้องกลุ่ม | `RoomSetupView` | F3 | – |
+| `/room` | อ่านกลุ่ม | `RoomFocusView` | F3 | `room_id` |
+| `/hatch` | ฟักไข่ | `HatchView` | F4 | `session_id` หรือ `room_id` |
+| `/result` | สรุปผล | `ResultView` | F3 | `session_id` หรือ `room_id` |
+| `/dex` | CPE Dex | `DexView` | F4 | – |
+| `/history` | ประวัติ + สถิติ | `HistoryView` | F3 | – |
 
 ## ไฟล์ save.json
 
@@ -121,7 +129,7 @@ CPE Egg Hatch · Python OOP · Frontend = Flet · Backend = class Python ใน�
 - **ห้ามเปลี่ยนชื่อ class, ตัวแปร, method หรือ parameter ในเอกสารนี้** โดยไม่บอกกลุ่ม
 - **ติดตั้ง** `pip install flet flet-audio pytest` · เทสต์ backend ด้วย `pytest` ใน `tests/`
 
-## Enum, Error, DTO ที่ทุกคนใช้ (P1 ดูแล)
+## Enum, Error, DTO ที่ทุกคนใช้ (B1 ดูแล)
 
 **ต้อง import:**
 

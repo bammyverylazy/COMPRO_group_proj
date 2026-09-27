@@ -1,20 +1,20 @@
-# P2 · Frontend Core
+# F1 · UI Core + Landing (Frontend)
 
-AppContext, Navigator, BaseView, widget กลาง, Theme, หน้า Landing
+AppContext, Navigator, BaseView, widget กลาง, Theme, Format, หน้า Landing
 
-> อ่าน [00-shared.md](00-shared.md) ก่อน: กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
+> อ่าน [00-shared.md](00-shared.md) ก่อน: วิธีทำงานแบบแยกฝั่ง, กติกาไข่, เส้นทางหน้าจอ, การตั้งชื่อ, clean code, Enum, Error, DTO
 
 ## สรุปงาน
 
-- **Backend (0 class):** ไม่มี
-- **Frontend (15 class):** `BaseWidget`, `BaseView`, `Navigator`, `AppContext`, `Theme`, `SoundManager`, `PixelButton`, `Popup`, `ConfirmDialog`, `StatTile`, `Format`, `HowToSlide`, `HowToPopup`, `PlayerPicker`, `LandingView`
-- **ใช้ของใคร:** P1 (`PlayerService`, `GameStore`, `Clock`, `Settings`) · import service ของทุกคนมาใส่ใน `AppContext`
-- **ใครใช้ของเรา:** ทุกคนที่ทำหน้าจอ
-- **branch:** `feat/frontend-core`
+- **ฝั่ง:** Frontend อย่างเดียว · เรียก backend ผ่าน `ctx.<service>` เท่านั้น
+- **Class ที่ต้องเขียน (15):** `BaseWidget`, `BaseView`, `Navigator`, `AppContext`, `Theme`, `SoundManager`, `PixelButton`, `Popup`, `ConfirmDialog`, `StatTile`, `Format`, `HowToSlide`, `HowToPopup`, `PlayerPicker`, `LandingView`
+- **ใช้ของใคร:** B1 (`Settings`, `GameStore`, `Clock`, `PlayerService`) · import service ของ B2, B3 มาใส่ใน `AppContext`
+- **ใครใช้ของเรา:** frontend ทุกคน
+- **branch:** `feat/f1-ui-core-landing`
 
 ## Frontend
 
-**Import ที่ต้องใช้ (รวมทุกไฟล์ frontend ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
+**Import ที่ต้องใช้ (รวมทุกไฟล์ของคุณ แต่ละไฟล์ใส่เฉพาะที่ใช้):**
 
 ```python
 from __future__ import annotations
@@ -125,16 +125,16 @@ from ui.room.room_setup_view import RoomSetupView
 | `store` | `GameStore` | ต้องส่งตอนสร้าง | ที่เก็บข้อมูลกลาง |
 | `clock` | `Clock` | สร้างใน `__init__` = `Clock(settings.demo_speed)` | นาฬิกากลาง |
 | `player` | `PlayerDTO \| None` | สร้างใน `__init__` = `None` | ผู้เล่นที่เลือกอยู่ |
-| `players` | `PlayerService` | สร้างใน `__init__` = `PlayerService(store, self.clock)` | P1 |
-| `tiers` | `TierService` | สร้างใน `__init__` = `TierService()` | P3 |
-| `focus` | `FocusSessionService` | สร้างใน `__init__` = `FocusSessionService(store, self.clock, settings)` | P4 |
-| `hatch` | `HatchService` | สร้างใน `__init__` = `HatchService(store)` | P3 |
-| `rooms` | `RoomService` | สร้างใน `__init__` = `RoomService(store, self.clock, settings, self.hatch)` | P5 |
-| `sanctuary` | `SanctuaryService` | สร้างใน `__init__` = `SanctuaryService(store)` | P6 |
-| `dex` | `DexService` | สร้างใน `__init__` = `DexService(store)` | P6 |
-| `analytics` | `AnalyticsService` | สร้างใน `__init__` = `AnalyticsService(store, settings)` | P7 |
-| `sound` | `SoundManager` | สร้างใน `__init__` = `SoundManager(page)` | P2 |
-| `nav` | `Navigator` | สร้างใน `__init__` = `Navigator(self)` | P2 |
+| `players` | `PlayerService` | สร้างใน `__init__` = `PlayerService(store, self.clock)` | B1 |
+| `tiers` | `TierService` | สร้างใน `__init__` = `TierService()` | B2 |
+| `focus` | `FocusSessionService` | สร้างใน `__init__` = `FocusSessionService(store, self.clock, settings)` | B3 |
+| `hatch` | `HatchService` | สร้างใน `__init__` = `HatchService(store)` | B2 |
+| `rooms` | `RoomService` | สร้างใน `__init__` = `RoomService(store, self.clock, settings, self.hatch)` | B3 |
+| `sanctuary` | `SanctuaryService` | สร้างใน `__init__` = `SanctuaryService(store)` | B3 |
+| `dex` | `DexService` | สร้างใน `__init__` = `DexService(store)` | B3 |
+| `analytics` | `AnalyticsService` | สร้างใน `__init__` = `AnalyticsService(store, settings)` | B3 |
+| `sound` | `SoundManager` | สร้างใน `__init__` = `SoundManager(page)` | F1 |
+| `nav` | `Navigator` | สร้างใน `__init__` = `Navigator(self)` | F1 |
 
 | method | return | ทำอะไร |
 |---|---|---|
@@ -347,7 +347,7 @@ from ui.room.room_setup_view import RoomSetupView
 | `route` | `str` | ค่าคงที่ของ class `= "/"` | path ของหน้า |
 | `requires_player` | `bool` | ค่าคงที่ของ class `= False` | - |
 | `picker` | `PlayerPicker \| None` | สร้างใน `__init__` = `None` | ตัวเลือกผู้เล่น |
-| `howto` | `HowToPopup \| None` | สร้างใน `__init__` = `None` | popup How to |
+| `howto` | `HowToPopup \| None` | สร้างใน `__init__` = `None` | popup How to (F1) |
 
 | method | return | ทำอะไร |
 |---|---|---|
