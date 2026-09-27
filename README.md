@@ -1,493 +1,272 @@
-Compro final · System design · Python only
+# CPE Egg Hatch
 
-# CPE Egg Hatch Blueprint
+แอปพลิเคชันด้านการโฟกัสและฟักไข่แบบเบา ๆ ที่ผู้ใช้เริ่ม session การเรียน/ทำงาน, บันทึก task note, ให้ timer ทำงานต่อไป, หยุดเมื่อพร้อม, รีวิว Session Summary ที่จำเป็น, ปลดล็อก tier ของไข่, และฟักสัตว์เป็นรางวัลจากการโฟกัส
 
-อ่านหนังสือ = กกไข่ อ่านครบเวลาไข่ก็ฟัก ได้สัตว์มาเดินดุ๊กดิ๊กในห้องภาค หน้านี้รวม game rules, flow chart, pipeline frontend/backend, data model, class diagram และการแบ่งงาน OOP ให้ทีม 9 คน เขียนด้วย Python ทั้งโปรเจกต์
+## ทิศทางของสินค้า
 
-สมมติฐานที่ใช้ (แก้ได้ถ้าทีมตกลงกันแล้วเป็นอย่างอื่น)
+โปรเจ็กต์นี้มีเป้าหมายเพื่อเป็น MVP แบบไม่มีการยืนยันตัวตน (no-auth) โดย Phase 1 จะเน้นเฉพาะลูปหลักเท่านั้น:
 
-- **Python ล้วน** ทั้งโปรเจกต์ · Frontend: **Flet** (เขียน UI ด้วย Python, รันได้ทั้ง desktop, web และมือถือ, มี Google OAuth ในตัว) · Backend: **service layer ใน Python + SQLAlchemy + SQLite**
-- Frontend กับ backend อยู่ในโปรแกรมเดียวกัน แยกกันด้วย layer: หน้าจอเรียก `Service` เท่านั้น ห้ามแตะ database ตรง ๆ
-- นาฬิกาเป็น **นับขึ้น** ตาม wireframe ข้อ 4 แล้วตอน Stop ค่อยดูว่าเวลาถึง tier ไหน · เวลาคิดจาก `started_at` ที่บันทึกใน database
-- ไม่มีระบบไข่ร้าว ไข่ไม่สำเร็จได้ทางเดียวคือกด Stop ก่อนครบ 15 นาที
+- Landing / Start
+- Lobby
+- Start Focus
+- Task note entry
+- Timer
+- Stop
+- Session Summary
+- Egg unlock + selection
+- Hatch + result
+- Return to lobby
 
-## กติกาเกม
+Checkpoint MVP ที่ต้องตรงตามคือ:
 
-| Tier | ชื่อไข่ | เวลาขั้นต่ำ | Common | Rare | Epic | Legendary |
-| --- | --- | --- | --- | --- | --- | --- |
-| `FRESHMAN` | ไข่รุ่นเรา | 15 นาที | 70% | 25% | 5% | 0% |
-| `SENIOR` | ไข่รุ่นพี่ | 30 นาที | 40% | 40% | 17% | 3% |
-| `PROFESSOR` | ไข่อาจารย์ (God Egg) | 60 นาที | 10% | 40% | 35% | 15% |
+START → LOBBY → START FOCUS → TASK NOTE → TIMER → STOP → SESSION SUMMARY → EGG UNLOCK → EGG SELECTION → HATCH → RESULT → LOBBY
 
-**ปลดล็อก tier**
+## สิ่งที่ไม่อยู่ใน Phase 1
 
-กด Stop แล้วเวลารวม ≥ เวลาขั้นต่ำของ tier ไหน ก็เลือกไข่ tier นั้นหรือต่ำกว่าได้ (หน้า Summary: Choose an egg)
+โปรเจ็กต์นี้ตั้งใจให้ไม่รวมสิ่งต่อไปนี้ไว้ใน MVP:
 
-**หยุดก่อน 15 นาที**
+- Login / sign up
+- Google OAuth
+- Password / remember-me flow
+- Subject หรือ course selection
+- ประวัติแชทหรือการส่งข้อความ
+- Dex, analytics, และ sanctuary expansion ในฐานะ feature หลักของ MVP
+- Database เป็น blocker สำหรับ Phase 1
 
-กด Stop แล้วยืนยัน "Are you sure to stop?" ก่อน 15 นาที = ไม่ได้ไข่ บันทึกเป็น FAILED ลง report
+## ลูปหลักและกฎการทำงาน
 
-**CPEGO แชท**
+1. Session การโฟกัสเริ่มจาก task note
+2. Timer จะนับเวลาที่ผ่านไป
+3. ผู้ใช้จะหยุด session เพื่อประเมินผลลัพธ์
+4. Session Summary จำเป็นต้องทำก่อน hatch
+5. การปลดล็อกไข่ใช้เกณฑ์เวลาเดิมที่มีอยู่ในโปรเจกต์
+6. ไข่ที่เลือกจะถูกใช้ในการฟักสัตว์
+7. CPEGO เป็น notification bubble แบบ milestone ไม่ใช่ระบบแชทแบบ real-time
 
-ระหว่างอ่าน CPEGO ส่งข้อความตอนครบ 15 / 30 / 60 นาที บอกว่าปลดล็อกไข่ระดับไหนแล้ว และชวนอ่านต่อเพื่อ swap เป็นไข่ที่ดีกว่า
+## โจทย์เวลาต่ำสุดที่ต้องรักษา
 
-**ได้ตัวซ้ำ**
+ตรรกะเรื่องเวลา minimum ที่มีอยู่เดิมจะถูกเก็บไว้และยังเป็นเส้นทางปลดล็อกหลัก:
 
-ถ้ายังไม่เคยมี: เพิ่มเข้าห้องภาค + ปลดล็อกใน CPE Dex · ถ้ามีแล้ว: level +1 ตัวใหญ่ขึ้น 15% ต่อ level (สูงสุด 2 เท่า)
+- Freshman egg: 15 นาที
+- Senior egg: 30 นาที
+- Professor egg: 60 นาที
 
-## User flow chart
+ตรรกะนี้เป็นพื้นฐานของ progression ในเกม reward loop
 
-ตาม wireframe ①–⑥ บวกหน้า Analytics Report ต่อท้ายทุก session ทั้งสำเร็จและไม่สำเร็จ
+## แผนการพัฒนา
 
-```mermaid
-flowchart TD
-A(["เปิดแอป"]) --> B{"จำการ login ไว้อยู่แล้ว?"}
-B -- "ไม่" --> C["① Sign in / Log in"]
-C --> C1{"เลือกวิธี"}
-C1 -- "Email + Password" --> C2{"กรอกครบ + ถูกต้อง?"}
-C2 -- "ไม่" --> C3["ขึ้น error สีแดงใต้ช่อง"] --> C
-C1 -- "Google" --> C4["Google OAuth"]
-C1 -- "Sign up" --> C5["กรอก username / email / password+ ติ๊ก Terms and Conditions"]
-C5 --> C2
-C2 -- "ใช่" --> D
-C4 --> D
-B -- "ใช่" --> D["② Main Lobbyห้องภาคคอม มีสัตว์เดินไปมา"]
-D --> H["How to Play panelslideshow"] --> D
-D --> I["CPE Dexดูสัตว์ + วิชาที่อ่าน"] --> D
-D --> R0["ประวัติ Report"] --> D
-D -- "START FOCUS" --> S["③ Set upใส่ชื่อวิชา + ดู Egg Rate"]
-S -- "BACK" --> D
-S -- "START" --> F["④ ฟักไข่: นาฬิกานับขึ้นCPEGO แชทแจ้งตอนครบ 15/30/60 นาที"]
-F -- "STOP" --> Q{"Are you sure to stop?"}
-Q -- "NO" --> F
-Q -- "YES" --> T{"เวลารวม ≥ 15 นาที?"}
-T -- "ไม่" --> X["ไม่ได้ไข่ → FAILED"]
-T -- "ใช่" --> SUM["⑤ SummaryTotal time + tier ที่ปลดล็อก"]
-SUM --> CH["Choose an egg"] --> CF{"Are you sure to choose?"}
-CF -- "NO" --> CH
-CF -- "YES" --> P["⑥ Egg pullingไข่สั่น → TADA → Congrats"]
-P --> N{"เคยมีตัวนี้แล้ว?"}
-N -- "ยังไม่มี" --> ADD["เพิ่มเข้าห้องภาค + อัปเดต Dex"]
-N -- "มีแล้ว" --> LV["Level +1 ตัวใหญ่ขึ้น"]
-ADD --> REP["Analytics Reportสำเร็จ/ไม่สำเร็จ, เวลาที่ใช้, สัตว์ที่ได้"]
-LV --> REP
-X --> REP
-REP -- "RETURN TO LOBBY" --> D
+### Phase 1
 
-```
+- Landing / lobby
+- Flow ของ focus session
+- การบันทึก task note
+- Timer + stop logic
+- Requirement สำหรับ Session Summary
+- Egg unlock + selection
+- Hatch result
+- CPEGO milestone bubble notifications
 
-## Study session state
+### Phase 2
 
-หัวใจของระบบคือ `StudySession` ทุกคนอ้าง status ชุดนี้ชุดเดียว (เป็น `Enum` ใน `domain/enums.py`)
+- Persistent storage และ session history
+- Owned creature collection
+- Save/load state ระหว่าง session
+- การกู้คืน session และ replay ที่ดีขึ้น
 
-```mermaid
-stateDiagram-v2
-[*] --> RUNNING: start(subject)
-RUNNING --> FAILED: stop ก่อน 15 นาที
-RUNNING --> READY_TO_HATCH: stop หลัง 15 นาที
-RUNNING --> ABANDONED: ปิดแอปค้างเกิน 6 ชม.
-READY_TO_HATCH --> HATCHED: hatch(tier)
-HATCHED --> [*]
-FAILED --> [*]
-ABANDONED --> [*]
+### Phase 3
 
-```
+- Sanctuary / collection views ขั้นสูง
+- Dex และ analytics
+- Expanded progression และ visual polish
+- Optional auth และ profile systems เฉพาะหลังจาก MVP เสถียรแล้ว
 
-## Pipeline frontend ↔ backend
+## สถาปัตยกรรมหลัก
 
-ทุกชั้นเป็น Python · หน้าจอ (View) เรียกผ่าน `AppContext` ที่ถือ service ทุกตัว · backend แบ่งชั้น Service → Domain → Repository → SQLite
+โปรเจ็กต์ควรทำตามโครงสร้างแบบชั้นง่าย ๆ:
 
-```mermaid
-flowchart LR
-subgraph FE["Frontend · Flet (Python)"]
-direction TB
-NV["Navigatorสลับหน้า + guard ต้อง login"]
-UI["Views: BaseView subclassesLogin, Lobby, Setup, Focus,Summary, Hatch, Dex, Report"]
-GL["UI logic classesStopwatchTimer, SanctuaryScene,PetSprite, CpegoBot, HatchAnimation"]
-CTX["AppContextcurrent_user + services"]
-NV --> UI
-UI --> GL
-UI --> CTX
-end
-subgraph BE["Backend · Python service layer"]
-direction TB
-SV["ServicesAuthService, FocusSessionService,SummaryService, HatchService,SanctuaryService, DexService, AnalyticsService"]
-DM["DomainEgg subclasses, EggFactory,GachaMachine, PetLevelPolicy"]
-RP["RepositoriesUser, Session, Pet, Species"]
-SV --> DM
-SV --> RP
-end
-DB[("SQLiteegg_hatch.db")]
-GO["Google OAuth"]
-CTX -- "เรียก method ตรง ๆได้ dataclass กลับ" --> SV
-RP --> DB
-UI -. "page.login(GoogleOAuthProvider)" .-> GO
+- UI layer: screens และ widgets
+- Service layer: session, summary, hatch, และ tier logic
+- Domain layer: enums, egg rules, และ reward logic
+- Persistence layer: เป็นทางเลือกในภายหลัง ไม่ใช่ dependency ของ Phase 1
 
-```
+การออกแบบที่แนะนำคือใช้ DTO-based service response และหลีกเลี่ยงให้ UI import repository หรือ model โดยตรง
 
-## Sequence: หนึ่งรอบการอ่าน
+## สรุป domain model
 
-```mermaid
-sequenceDiagram
-autonumber
-actor U as ผู้ใช้
-participant V as Flet View
-participant S as Services
-participant DB as SQLite
-U->>V: ใส่วิชา แล้วกด START
-V->>S: FocusSessionService.start(user, subject)
-S->>DB: insert StudySession RUNNING, started_at = now
-S-->>V: SessionDTO
-V->>V: StopwatchTimer.start()
-V->>V: CpegoBot แจ้งเมื่อครบ 15/30/60 นาที
-U->>V: STOP แล้วกด YES
-V->>S: FocusSessionService.stop(session_id)
-S->>S: duration = now - started_at
-S-->>V: StopResult(status, duration, unlocked_tiers)
-U->>V: เลือกไข่ SENIOR แล้วกด YES
-V->>S: HatchService.hatch(session_id, SENIOR)
-S->>S: EggFactory.create(SENIOR).roll(pool, gacha)
-S->>DB: upsert OwnedPet (ใหม่ หรือ level+1)
-S-->>V: HatchResult(species, is_new, level)
-V->>V: HatchAnimation เล่น แล้วโชว์ Congrats
-V->>S: AnalyticsService.session_report(session_id)
-S-->>V: SessionReport
+### `EggTier`
 
-```
+- `FRESHMAN` = ไข่ 15 นาที
+- `SENIOR` = ไข่ 30 นาที
+- `PROFESSOR` = ไข่ 60 นาที
 
-## Service contract
+### `Rarity`
 
-แทน API แบบ HTTP · หน้าจอเรียก method เหล่านี้ได้อย่างเดียว คืนค่าเป็น `dataclass` ใน `app/dto.py` · คนที่ 2 เป็นเจ้าของ DTO ถ้าจะเปลี่ยน field ต้องแจ้งกลุ่มก่อน
+- `COMMON`
+- `RARE`
+- `EPIC`
+- `LEGENDARY`
 
-| Service | Method | ใช้ทำอะไร | เจ้าของ |
+### `SessionStatus`
+
+- `IDLE`
+- `RUNNING`
+- `STOPPED`
+- `SUMMARY`
+- `READY_TO_HATCH`
+- `FAILED`
+- `HATCHED`
+
+### `StudySession`
+
+ข้อมูลหลักของ focus session ควรมีอย่างน้อย:
+
+- `id`
+- `task_note`
+- `started_at`
+- `ended_at`
+- `duration_sec`
+- `status`
+- `chosen_tier`
+- `species_id`
+- `unlocked_tier`
+
+Method ที่ควรมี:
+
+- `elapsed_sec(now)`
+- `start(task_note)`
+- `stop(now, min_success_sec)`
+- `can_hatch()`
+- `mark_hatched(tier, species_id)`
+- `is_success()`
+- `to_dto()`
+
+### `SummaryDTO`
+
+ใช้หลังจาก stop flow และควรมีข้อมูลต่อไปนี้:
+
+- `session_id`
+- `task_note`
+- `duration_sec`
+- `status`
+- `unlocked_tiers`
+- `best_tier`
+
+### `FocusSessionService`
+
+หน้าที่หลัก:
+
+- เริ่ม session ใหม่
+- ดึง session ที่กำลังทำอยู่
+- วัด elapsed time
+- หยุด session
+- กำหนด unlock state จากระยะเวลา
+- คืนผลลัพธ์ที่ UI ของ summary จำเป็นต้องใช้
+
+### `SummaryService`
+
+หน้าที่หลัก:
+
+- ตรวจสอบว่า session นั้นสามารถเข้าสู่ summary ได้หรือไม่
+- ส่งข้อมูล summary ให้ UI
+- เปิดเผย egg tiers ที่ unlock ได้
+
+### `HatchService`
+
+หน้าที่หลัก:
+
+- ตรวจสอบ session และ egg ที่เลือก
+- สุ่ม species จาก egg tier pool
+- สร้างหรืออัปเกรด owned creature
+- ทำเครื่องหมายว่า session นี้ hatching แล้ว
+- คืน hatch result DTO
+
+### `CPEGO`
+
+CPEGO ควรเป็น notification bubble แบบ milestone และทำหน้าที่เป็น UI assistant แบบเบา ๆ แทนการเป็น chat interface โดยควรแสดง notification เช่น:
+
+- session started
+- milestone reached at 15 minutes
+- milestone reached at 30 minutes
+- milestone reached at 60 minutes
+- egg unlocked หรือ hatch complete
+
+## ข้อจำกัดด้านการ implement
+
+- ใช้ enum comparison แบบ `is` แทน string comparison
+- ให้ UI และ service contract อยู่ในรูป DTO-based
+- ถือว่า database persistence เป็นเรื่อง Phase 2 เว้นแต่ทีมจะเลือกใช้ local storage ในภายหลัง
+- ให้ MVP คงความเล็กและเรียบ และหลีกเลี่ยง auth, subject, หรือ chat จนกว่าลูปหลักจะเสถียรแล้ว
+- รักษา threshold logic เดิมไว้: 15 / 30 / 60 นาที
+- ให้ `Session Summary` เป็นขั้นตอนที่จำเป็นก่อน hatch
+
+## รายการใน future scope
+
+ฟีเจอร์เหล่านี้เป็นไอเดียที่ใช้ได้ใน phase ถัดไป แต่ไม่ควรเป็นส่วนหนึ่งของ Phase 1 acceptance:
+
+- authentication และ profile management
+- Google OAuth
+- course และ subject models
+- CPEGO chat transcript/history
+- dex analytics dashboards
+- advanced sanctuary management
+- full database-backed persistence
+
+## สรุป
+
+MVP นี้ไม่ใช่ study tracker แบบ auth-heavy แต่เป็น product loop ที่มุ่งเน้นเรื่องเดียว: เริ่มงาน, โฟกัสต่อเนื่อง, หยุด, สรุป, ปลดล็อกไข่, และฟักผลลัพธ์ นี่คือคำจำกัดความของผลิตภัณฑ์ที่ codebase และเอกสารควรสะท้อนให้เห็น
+
+## `Egg`
+
+แม่ของไข่ทุกระดับ
+
+| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
 | --- | --- | --- | --- |
-| `AuthService` | `register(username, email, password, accepted_terms)` | สมัครสมาชิก | P1 |
-| `AuthService` | `login(email, password)` | ล็อกอินด้วย email | P1 |
-| `AuthService` | `login_with_google(google_user)` | หา/สร้าง user จากข้อมูล Google | P1 |
-| `AuthService` | `restore_session()` / `logout()` | จำการ login ไว้ในเครื่อง | P1 |
-| `TierService` | `list_tiers()` | tier, เวลาขั้นต่ำ, egg rate (หน้า Set up) | P5 |
-| `FocusSessionService` | `start(user, subject)` | เริ่ม session | P6 |
-| `FocusSessionService` | `elapsed(session_id)` | เวลาที่อ่านไปแล้ว ใช้ให้ CPEGO รู้ milestone | P6 |
-| `FocusSessionService` | `stop(session_id)` | หยุด คำนวณเวลา ตัดสิน FAILED หรือ READY\_TO\_HATCH | P6 |
-| `SummaryService` | `get_summary(session_id)` | Total time + ไข่ที่เลือกได้ | P7 |
-| `HatchService` | `hatch(session_id, tier)` | สุ่มสัตว์ + เพิ่มตัวใหม่หรือ level up | P8 |
-| `SanctuaryService` | `list_pets(user)` | สัตว์ทั้งหมดในห้องภาค + level | P4 |
-| `DexService` | `list_entries(user)` | ทุก species พร้อมสถานะ locked/unlocked | P9 |
-| `DexService` | `get_entry(user, species_id)` | รายละเอียด + วิชาที่อ่านตอนได้ตัวนี้ | P9 |
-| `AnalyticsService` | `session_report(session_id)` | Report ของ session เดียว | P7 |
-| `AnalyticsService` | `history(user)` | ประวัติทุก session + สถิติรวม | P9 |
+| `tier` | `EggTier` | ภายใน class | ระดับไข่ |
+| `name_th` | `str` | ภายใน class | ชื่อภาษาไทย |
+| `image_path` | `str` | ภายใน class | รูปไข่ |
 
-## Data model
+| method | คืนค่า | หน้าที่ |
+| --- | --- | --- | --- |
+| `required_minutes()` *abstract* | `int` | เวลาขั้นต่ำ |
+| `rarity_weights()` *abstract* | `dict[Rarity, int]` | น้ำหนักสุ่มสัตว์ |
+| `is_unlocked(duration_sec: int)` | `bool` | True ถ้าเวลาเพียงพอ |
+| `roll(pool: list[Species], gacha: GachaMachine)` | `Species` | เลือกสัตว์จาก pool ตาม rarity |
+| `to_tier_info()` | `TierInfo` | แปลงเป็น DTO |
 
-```mermaid
-erDiagram
-USER ||--o{ STUDY_SESSION : "อ่าน"
-USER ||--o{ OWNED_PET : "เลี้ยง"
-SPECIES ||--o{ OWNED_PET : "เป็นชนิด"
-SPECIES |o--o{ STUDY_SESSION : "ฟักออกมาเป็น"
-USER {
-int id PK
-string username
-string email
-string password_hash
-string google_id
-datetime created_at
-}
-SPECIES {
-int id PK
-string name
-string tier
-string rarity
-string sprite_path
-string description
-}
-STUDY_SESSION {
-int id PK
-int user_id FK
-string subject
-datetime started_at
-datetime ended_at
-int duration_sec
-string status
-string chosen_tier
-int species_id FK
-}
-OWNED_PET {
-int id PK
-int user_id FK
-int species_id FK
-int level
-int times_hatched
-datetime first_hatched_at
-}
+### `FreshmanEgg` / `SeniorEgg` / `ProfessorEgg`
 
-```
+*class* · สืบทอดจาก `Egg`
 
-## OOP class diagram
+Implement เหมือนเดิมแต่ใช้โครงใหม่กับ Phase 1
 
-จุดที่อาจารย์น่าจะดู: inheritance (`Egg`, `AuthProvider`, `BaseRepository`, `BaseView`), polymorphism (`roll()`, `authenticate()`, `build()`), encapsulation (state ของ session เปลี่ยนผ่าน method เท่านั้น), abstraction (`ABC`)
+### `EggFactory`
 
-```mermaid
-classDiagram
-class Egg {
-<>
-+tier: EggTier
-+required_minutes()* int
-+rarity_weights()* dict
-+roll(pool, gacha) Species
-}
-class FreshmanEgg
-class SeniorEgg
-class ProfessorEgg
-Egg <|-- FreshmanEgg
-Egg <|-- SeniorEgg
-Egg <|-- ProfessorEgg
-class EggFactory {
-+create(tier) Egg
-+unlocked_for(duration_sec) list~Egg~
-}
-EggFactory ..> Egg
-class GachaMachine {
--rng: Random
-+pick_rarity(weights) Rarity
-+pick_species(pool, rarity) Species
-}
-Egg --> GachaMachine
-class StudySession {
--status: SessionStatus
-+stop(now) void
-+mark_hatched(species) void
-+is_success() bool
-}
-class OwnedPet {
-+level: int
-+level_up() void
-+scale() float
-}
-class AuthProvider {
-<>
-+authenticate(payload)* User
-}
-AuthProvider <|-- EmailAuthProvider
-AuthProvider <|-- GoogleAuthProvider
-class BaseRepository~T~ {
-+get(id) T
-+add(obj) T
-+list(filters) list~T~
-}
-BaseRepository <|-- UserRepository
-BaseRepository <|-- SessionRepository
-BaseRepository <|-- PetRepository
-BaseRepository <|-- SpeciesRepository
-class BaseView {
-<>
-+route: str
-+ctx: AppContext
-+build()* Control
-+on_enter() void
-}
-BaseView <|-- LoginView
-BaseView <|-- LobbyView
-BaseView <|-- SetupView
-BaseView <|-- FocusView
-BaseView <|-- SummaryView
-BaseView <|-- HatchView
-BaseView <|-- DexView
-BaseView <|-- ReportView
-class FocusSessionService {
-+start(user, subject)
-+elapsed(session_id)
-+stop(session_id)
-}
-class HatchService {
-+hatch(session_id, tier) HatchResult
-}
-FocusSessionService --> SessionRepository
-FocusSessionService --> StudySession
-HatchService --> EggFactory
-HatchService --> PetRepository
-HatchService --> OwnedPet
+*class* · `app/domain/egg_factory.py`
 
-```
+**สร้าง:** `EggFactory()`
 
-### ตัวอย่าง: Egg + polymorphism (backend)
+| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
+| --- | --- | --- | --- |
+| `_registry` | `dict[EggTier, type[Egg]]` | สร้างใน `__init__` | mapping tier → egg class |
 
-```python
-from abc import ABC, abstractmethod
-class Egg(ABC):
-tier: EggTier
-@abstractmethod
-def required_minutes(self) -> int: ...
-@abstractmethod
-def rarity_weights(self) -> dict[Rarity, int]: ...
-def roll(self, pool, gacha: "GachaMachine"):
-rarity = gacha.pick_rarity(self.rarity_weights())
-return gacha.pick_species(pool, rarity)
-class SeniorEgg(Egg):
-tier = EggTier.SENIOR
-def required_minutes(self) -> int:
-return 30
-def rarity_weights(self):
-return {Rarity.COMMON: 40, Rarity.RARE: 40,
-Rarity.EPIC: 17, Rarity.LEGENDARY: 3}
-```
+| method | คืนค่า | หน้าที่ |
+| --- | --- | --- | --- |
+| `create(tier: EggTier)` | `Egg` | สร้างไข่ตาม tier |
+| `all()` | `list[Egg]` | คืน egg ทั้งหมด เรียงจากต่ำไปสูง |
+| `unlocked_for(duration_sec: int)` | `list[Egg]` | ตัวที่ unlock จากเวลา |
+| `best_for(duration_sec: int)` | `Egg | None` | tier สูงสุดที่ unlock |
 
-### ตัวอย่าง: BaseView + Flet (frontend)
+### `TierService`
 
-```python
-import flet as ft
-from abc import ABC, abstractmethod
-class BaseView(ABC):
-route: str = "/"
-def __init__(self, ctx: "AppContext"):
-self.ctx = ctx
-@abstractmethod
-def build(self) -> ft.Control: ...
-def on_enter(self) -> None:
-pass
-def to_view(self) -> ft.View:
-return ft.View(self.route, [self.build()])
-class SetupView(BaseView):
-route = "/setup"
-def build(self) -> ft.Control:
-self.subject = ft.TextField(label="วิชาที่จะอ่าน")
-return ft.Column([
-ft.TextButton("BACK", on_click=lambda e: self.ctx.nav.go("/lobby")),
-self.subject,
-ft.FilledButton("START", on_click=self.start),
-])
-def start(self, e):
-session = self.ctx.focus.start(self.ctx.user, self.subject.value)
-self.ctx.nav.go(f"/focus/{session.id}")
-```
+*class* · `app/services/tier_service.py`
 
-## Folder structure
+**สร้าง:** `TierService(factory=None)`
 
-โปรเจกต์ Python เดียว แบ่งตาม feature ทั้งฝั่ง `ui/` และ `app/` แต่ละคนแตะแค่โฟลเดอร์ของตัวเองเป็นหลัก ลด merge conflict
+| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
+| --- | --- | --- | --- |
+| `factory` | `EggFactory | None` | ส่งหรือไม่ก็ได้ | ถ้า None ให้สร้างเอง |
 
-```text
-cpe_egg_hatch/
-├── main.py P3 ft.app(target=...)
-├── ui/ ← frontend (Flet)
-│ ├── core/ P3
-│ │ ├── app_context.py
-│ │ ├── navigator.py
-│ │ ├── base_view.py
-│ │ ├── theme.py
-│ │ ├── sound_manager.py
-│ │ └── widgets/ Panel, ConfirmDialog,
-│ │ PixelButton, ScrollPanel
-│ ├── auth/ P1
-│ ├── howto/ P3
-│ ├── lobby/ P4
-│ ├── setup/ P5
-│ ├── focus/ P6
-│ ├── summary/ P7
-│ ├── hatch/ P8
-│ ├── dex/ P9
-│ └── report/ P7 + P9
-└── assets/ sprites, sfx, fonts
-```
-```text
-cpe_egg_hatch/
-├── app/ ← backend (Python)
-│ ├── config.py P2
-│ ├── database.py P2
-│ ├── dto.py P2 (+ เจ้าของ feature)
-│ ├── models/ P2 SQLAlchemy
-│ ├── repositories/ P2
-│ ├── domain/
-│ │ ├── enums.py P2
-│ │ ├── eggs.py P5
-│ │ ├── gacha.py P8
-│ │ └── pet_policy.py P8
-│ └── services/
-│ ├── auth/ P1
-│ ├── tier_service.py P5
-│ ├── focus_service.py P6
-│ ├── summary_service.py P7
-│ ├── hatch_service.py P8
-│ ├── sanctuary_service.py P4
-│ ├── dex_service.py P9
-│ └── analytics_service.py P7 + P9
-├── seed/species.json P5
-├── tests/ pytest ทุกคน
-└── requirements.txt flet, sqlalchemy,
-bcrypt, pytest
-```
+| method | คืนค่า | หน้าที่ |
+| --- | --- | --- | --- |
 
-## แบ่งงาน 9 คน
 
-แบ่งแบบ vertical slice: แต่ละคนถือ feature ของตัวเองทั้งหน้าจอ (Flet) และ service ยกเว้น P2 (backend core) กับ P3 (frontend core) ที่วางพื้นให้คนอื่น
-
-### P1 · Auth
-
-หน้า ① Sign in / Log in / Sign up
-
-- **UI:** `LoginView` `SignUpPanel` `TermsDialog` ปุ่ม Google, validation + error สีแดง, layout desktop/mobile
-- **Backend:** `AuthProvider` (ABC) → `EmailAuthProvider` `GoogleAuthProvider`, `AuthService` `PasswordHasher` `CredentialValidator` `RememberMe` (จำ login ในเครื่อง)
-- **รอ:** P2 (User model), P3 (Navigator, AppContext)
-
-### P2 · Backend core + Data
-
-Tech lead ฝั่ง backend · เจ้าของ DTO
-
-- **Backend:** `Database` `Settings` models ทั้ง 4 ตัว, `BaseRepository[T]` + `UserRepository` `SessionRepository` `PetRepository` `SpeciesRepository`, enums, custom exceptions
-- **อื่น ๆ:** `dto.py`, seed script, pytest fixtures (database ชั่วคราวสำหรับเทสต์)
-- **รอ:** ไม่มี ต้องเสร็จก่อนเพื่อน (สัปดาห์แรก)
-
-### P3 · Frontend core + How to
-
-Tech lead ฝั่งหน้าจอ · ชุด widget กลาง
-
-- **UI:** `main.py` `AppContext` `Navigator` (guard หน้าต้อง login) `BaseView`, widgets: `Panel` `ConfirmDialog` `PixelButton` `ScrollPanel`, `Theme` สี/ฟอนต์, `SoundManager`
-- **หน้า:** `HowToPanel` slideshow + next page + ปุ่มปิด
-- **รอ:** ไม่มี ต้องเสร็จก่อนเพื่อน (สัปดาห์แรก)
-
-### P4 · Department Sanctuary
-
-หน้า ② Main Lobby ห้องภาคคอม
-
-- **UI:** `LobbyView` (ปุ่ม Index, How to, Start Focus), `SanctuaryScene` (`ft.Stack` + loop ขยับสัตว์), `PetSprite` (เดินสุ่ม, ขนาดตาม level, คลิกดูชื่อ)
-- **Backend:** `SanctuaryService.list_pets()`
-- **รอ:** P2, P3, sprite จาก P5
-
-### P5 · Set up + Egg domain
-
-หน้า ③ Set up info · ระบบไข่ 3 tier
-
-- **UI:** `SetupView` `SubjectPicker` `EggRatePanel` (scroll ได้, เปิด/ปิด)
-- **Backend:** `Egg` (ABC) → `FreshmanEgg` `SeniorEgg` `ProfessorEgg`, `EggFactory` `TierService`
-- **Data:** รายชื่อสัตว์ + rarity ใน `seed/species.json`, ประสาน sprite กับคนวาด
-
-### P6 · Focus session + CPEGO
-
-หน้า ④ ฟักไข่ · นาฬิกา + แชทบอท
-
-- **UI:** `FocusView` `StopwatchTimer` (นับขึ้น, async tick ทุก 1 วิ) `EggView` ปุ่ม STOP + confirm · `CpegoPanel` `CpegoBot` (ข้อความตอนครบ 15/30/60 นาที, ชวน swap egg) `NotiButton` บนมือถือ
-- **Backend:** `StudySession` (state machine), `FocusSessionService`, เช็ก session ค้างเกิน 6 ชม. ตอนเปิดแอป
-- **รอ:** P2, P3, P5 (เวลาขั้นต่ำ)
-
-### P7 · Summary + Session Report
-
-หน้า ⑤ Summary · รายงานหลังอ่านจบ
-
-- **UI:** `SummaryView` `EggChoiceList` + confirm "choose God egg?", ปุ่ม View Index · `ReportView` (สำเร็จ/ไม่สำเร็จ, เวลาที่ใช้, สัตว์ที่ได้)
-- **Backend:** `SummaryService` (ใช้ `EggFactory.unlocked_for`), `AnalyticsService.session_report()` `SessionReport`
-- **รอ:** P5, P6
-
-### P8 · Hatch / Gacha
-
-หน้า ⑥ Egg pulling · ได้ตัวใหม่หรือ level up
-
-- **UI:** `HatchView` `HatchAnimation` (ไข่สั่น → แตก → TADA + SFX → Congrats + ชื่อ) ด้วย `ft.animation`, ปุ่ม Return to lobby
-- **Backend:** `GachaMachine` (weighted random, ใส่ seed ได้เพื่อเทสต์), `HatchService` `PetLevelPolicy` `HatchResult`
-- **รอ:** P5 (Egg), P6 (session READY)
-
-### P9 · CPE Dex + History
-
-สมุดสะสม · ประวัติและสถิติทั้งหมด
-
-- **UI:** `DexView` (grid, ตัวที่ยังไม่ได้เป็นเงาดำ, highlight ตัวที่เลือก, panel ชื่อ/tier/level/วิชาที่อ่าน) · `HistoryView` (ทุก session, อัตราสำเร็จ, เวลารวมรายสัปดาห์เป็นกราฟ)
-- **Backend:** `DexService` `AnalyticsService.history()`
-- **รอ:** P2, P8 (OwnedPet)
