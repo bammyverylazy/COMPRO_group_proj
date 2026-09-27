@@ -1,272 +1,126 @@
-# CPE Egg Hatch
-
-แอปพลิเคชันด้านการโฟกัสและฟักไข่แบบเบา ๆ ที่ผู้ใช้เริ่ม session การเรียน/ทำงาน, บันทึก task note, ให้ timer ทำงานต่อไป, หยุดเมื่อพร้อม, รีวิว Session Summary ที่จำเป็น, ปลดล็อก tier ของไข่, และฟักสัตว์เป็นรางวัลจากการโฟกัส
-
-## ทิศทางของสินค้า
-
-โปรเจ็กต์นี้มีเป้าหมายเพื่อเป็น MVP แบบไม่มีการยืนยันตัวตน (no-auth) โดย Phase 1 จะเน้นเฉพาะลูปหลักเท่านั้น:
-
-- Landing / Start
-- Lobby
-- Start Focus
-- Task note entry
-- Timer
-- Stop
-- Session Summary
-- Egg unlock + selection
-- Hatch + result
-- Return to lobby
-
-Checkpoint MVP ที่ต้องตรงตามคือ:
-
-START → LOBBY → START FOCUS → TASK NOTE → TIMER → STOP → SESSION SUMMARY → EGG UNLOCK → EGG SELECTION → HATCH → RESULT → LOBBY
-
-## สิ่งที่ไม่อยู่ใน Phase 1
-
-โปรเจ็กต์นี้ตั้งใจให้ไม่รวมสิ่งต่อไปนี้ไว้ใน MVP:
-
-- Login / sign up
-- Google OAuth
-- Password / remember-me flow
-- Subject หรือ course selection
-- ประวัติแชทหรือการส่งข้อความ
-- Dex, analytics, และ sanctuary expansion ในฐานะ feature หลักของ MVP
-- Database เป็น blocker สำหรับ Phase 1
-
-## ลูปหลักและกฎการทำงาน
-
-1. Session การโฟกัสเริ่มจาก task note
-2. Timer จะนับเวลาที่ผ่านไป
-3. ผู้ใช้จะหยุด session เพื่อประเมินผลลัพธ์
-4. Session Summary จำเป็นต้องทำก่อน hatch
-5. การปลดล็อกไข่ใช้เกณฑ์เวลาเดิมที่มีอยู่ในโปรเจกต์
-6. ไข่ที่เลือกจะถูกใช้ในการฟักสัตว์
-7. CPEGO เป็น notification bubble แบบ milestone ไม่ใช่ระบบแชทแบบ real-time
-
-## โจทย์เวลาต่ำสุดที่ต้องรักษา
-
-ตรรกะเรื่องเวลา minimum ที่มีอยู่เดิมจะถูกเก็บไว้และยังเป็นเส้นทางปลดล็อกหลัก:
-
-- Freshman egg: 15 นาที
-- Senior egg: 30 นาที
-- Professor egg: 60 นาที
-
-ตรรกะนี้เป็นพื้นฐานของ progression ในเกม reward loop
-
-## แผนการพัฒนา
-
-### Phase 1
-
-- Landing / lobby
-- Flow ของ focus session
-- การบันทึก task note
-- Timer + stop logic
-- Requirement สำหรับ Session Summary
-- Egg unlock + selection
-- Hatch result
-- CPEGO milestone bubble notifications
-
-### Phase 2
-
-- Persistent storage และ session history
-- Owned creature collection
-- Save/load state ระหว่าง session
-- การกู้คืน session และ replay ที่ดีขึ้น
-
-### Phase 3
-
-- Sanctuary / collection views ขั้นสูง
-- Dex และ analytics
-- Expanded progression และ visual polish
-- Optional auth และ profile systems เฉพาะหลังจาก MVP เสถียรแล้ว
-
-## สถาปัตยกรรมหลัก
-
-โปรเจ็กต์ควรทำตามโครงสร้างแบบชั้นง่าย ๆ:
-
-- UI layer: screens และ widgets
-- Service layer: session, summary, hatch, และ tier logic
-- Domain layer: enums, egg rules, และ reward logic
-- Persistence layer: เป็นทางเลือกในภายหลัง ไม่ใช่ dependency ของ Phase 1
-
-การออกแบบที่แนะนำคือใช้ DTO-based service response และหลีกเลี่ยงให้ UI import repository หรือ model โดยตรง
-
-## สรุป domain model
-
-### `EggTier`
-
-- `FRESHMAN` = ไข่ 15 นาที
-- `SENIOR` = ไข่ 30 นาที
-- `PROFESSOR` = ไข่ 60 นาที
-
-### `Rarity`
-
-- `COMMON`
-- `RARE`
-- `EPIC`
-- `LEGENDARY`
-
-### `SessionStatus`
-
-- `IDLE`
-- `RUNNING`
-- `STOPPED`
-- `SUMMARY`
-- `READY_TO_HATCH`
-- `FAILED`
-- `HATCHED`
-
-### `StudySession`
-
-ข้อมูลหลักของ focus session ควรมีอย่างน้อย:
-
-- `id`
-- `task_note`
-- `started_at`
-- `ended_at`
-- `duration_sec`
-- `status`
-- `chosen_tier`
-- `species_id`
-- `unlocked_tier`
-
-Method ที่ควรมี:
-
-- `elapsed_sec(now)`
-- `start(task_note)`
-- `stop(now, min_success_sec)`
-- `can_hatch()`
-- `mark_hatched(tier, species_id)`
-- `is_success()`
-- `to_dto()`
-
-### `SummaryDTO`
-
-ใช้หลังจาก stop flow และควรมีข้อมูลต่อไปนี้:
-
-- `session_id`
-- `task_note`
-- `duration_sec`
-- `status`
-- `unlocked_tiers`
-- `best_tier`
-
-### `FocusSessionService`
-
-หน้าที่หลัก:
-
-- เริ่ม session ใหม่
-- ดึง session ที่กำลังทำอยู่
-- วัด elapsed time
-- หยุด session
-- กำหนด unlock state จากระยะเวลา
-- คืนผลลัพธ์ที่ UI ของ summary จำเป็นต้องใช้
-
-### `SummaryService`
-
-หน้าที่หลัก:
-
-- ตรวจสอบว่า session นั้นสามารถเข้าสู่ summary ได้หรือไม่
-- ส่งข้อมูล summary ให้ UI
-- เปิดเผย egg tiers ที่ unlock ได้
-
-### `HatchService`
-
-หน้าที่หลัก:
-
-- ตรวจสอบ session และ egg ที่เลือก
-- สุ่ม species จาก egg tier pool
-- สร้างหรืออัปเกรด owned creature
-- ทำเครื่องหมายว่า session นี้ hatching แล้ว
-- คืน hatch result DTO
-
-### `CPEGO`
-
-CPEGO ควรเป็น notification bubble แบบ milestone และทำหน้าที่เป็น UI assistant แบบเบา ๆ แทนการเป็น chat interface โดยควรแสดง notification เช่น:
-
-- session started
-- milestone reached at 15 minutes
-- milestone reached at 30 minutes
-- milestone reached at 60 minutes
-- egg unlocked หรือ hatch complete
-
-## ข้อจำกัดด้านการ implement
-
-- ใช้ enum comparison แบบ `is` แทน string comparison
-- ให้ UI และ service contract อยู่ในรูป DTO-based
-- ถือว่า database persistence เป็นเรื่อง Phase 2 เว้นแต่ทีมจะเลือกใช้ local storage ในภายหลัง
-- ให้ MVP คงความเล็กและเรียบ และหลีกเลี่ยง auth, subject, หรือ chat จนกว่าลูปหลักจะเสถียรแล้ว
-- รักษา threshold logic เดิมไว้: 15 / 30 / 60 นาที
-- ให้ `Session Summary` เป็นขั้นตอนที่จำเป็นก่อน hatch
-
-## รายการใน future scope
-
-ฟีเจอร์เหล่านี้เป็นไอเดียที่ใช้ได้ใน phase ถัดไป แต่ไม่ควรเป็นส่วนหนึ่งของ Phase 1 acceptance:
-
-- authentication และ profile management
-- Google OAuth
-- course และ subject models
-- CPEGO chat transcript/history
-- dex analytics dashboards
-- advanced sanctuary management
-- full database-backed persistence
-
-## สรุป
-
-MVP นี้ไม่ใช่ study tracker แบบ auth-heavy แต่เป็น product loop ที่มุ่งเน้นเรื่องเดียว: เริ่มงาน, โฟกัสต่อเนื่อง, หยุด, สรุป, ปลดล็อกไข่, และฟักผลลัพธ์ นี่คือคำจำกัดความของผลิตภัณฑ์ที่ codebase และเอกสารควรสะท้อนให้เห็น
-
-## `Egg`
-
-แม่ของไข่ทุกระดับ
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-| --- | --- | --- | --- |
-| `tier` | `EggTier` | ภายใน class | ระดับไข่ |
-| `name_th` | `str` | ภายใน class | ชื่อภาษาไทย |
-| `image_path` | `str` | ภายใน class | รูปไข่ |
-
-| method | คืนค่า | หน้าที่ |
-| --- | --- | --- | --- |
-| `required_minutes()` *abstract* | `int` | เวลาขั้นต่ำ |
-| `rarity_weights()` *abstract* | `dict[Rarity, int]` | น้ำหนักสุ่มสัตว์ |
-| `is_unlocked(duration_sec: int)` | `bool` | True ถ้าเวลาเพียงพอ |
-| `roll(pool: list[Species], gacha: GachaMachine)` | `Species` | เลือกสัตว์จาก pool ตาม rarity |
-| `to_tier_info()` | `TierInfo` | แปลงเป็น DTO |
-
-### `FreshmanEgg` / `SeniorEgg` / `ProfessorEgg`
-
-*class* · สืบทอดจาก `Egg`
-
-Implement เหมือนเดิมแต่ใช้โครงใหม่กับ Phase 1
-
-### `EggFactory`
-
-*class* · `app/domain/egg_factory.py`
-
-**สร้าง:** `EggFactory()`
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-| --- | --- | --- | --- |
-| `_registry` | `dict[EggTier, type[Egg]]` | สร้างใน `__init__` | mapping tier → egg class |
-
-| method | คืนค่า | หน้าที่ |
-| --- | --- | --- | --- |
-| `create(tier: EggTier)` | `Egg` | สร้างไข่ตาม tier |
-| `all()` | `list[Egg]` | คืน egg ทั้งหมด เรียงจากต่ำไปสูง |
-| `unlocked_for(duration_sec: int)` | `list[Egg]` | ตัวที่ unlock จากเวลา |
-| `best_for(duration_sec: int)` | `Egg | None` | tier สูงสุดที่ unlock |
-
-### `TierService`
-
-*class* · `app/services/tier_service.py`
-
-**สร้าง:** `TierService(factory=None)`
-
-| ตัวแปร | ชนิด | สร้างยังไง | ความหมาย |
-| --- | --- | --- | --- |
-| `factory` | `EggFactory | None` | ส่งหรือไม่ก็ได้ | ถ้า None ให้สร้างเอง |
-
-| method | คืนค่า | หน้าที่ |
-| --- | --- | --- | --- |
-
-
+# CPE Egg Hatch · Phase 1 Feature Flowchart
+
+เป้าหมาย D5: เล่นได้ครบหนึ่งรอบ (playable end-to-end MVP) ตั้งแต่เปิดแอปจนได้สัตว์กลับมาอยู่ในห้องภาค
+
+## ขอบเขต Phase 1
+
+| มีใน Phase 1 | ยังไม่มี (ไป Phase 2–3) |
+|---|---|
+| 4 หน้า: Landing → Lobby → Focus → Hatch/Result | Login / Signup / Google OAuth |
+| นาฬิกานับขึ้น + ปลดล็อกไข่ 3 ระดับ (15 / 30 / 60 นาที) | แชท CPEGO แบบกล่องแชท |
+| CPEGO เป็น popup/bubble เด้งตอนครบ milestone | Database (Phase 2) |
+| สุ่มสัตว์ตาม rarity ของไข่ | CPE Dex, History, Analytics (Phase 3) |
+| สัตว์ที่ได้ไปเดินใน Lobby (ตัวซ้ำ = level +1) | Advanced Sanctuary (Phase 3) |
+| เก็บข้อมูลใน memory (ปิดแอปแล้วหาย) | |
+
+## Flowchart ทั้งเกม
+
+```mermaid
+flowchart TD
+  START(["เปิดแอป"]) --> L
+
+  subgraph P1["① Landing"]
+    L["โลโก้ + ชื่อเกม"] --> L1["กด START"]
+  end
+
+  L1 --> LB
+
+  subgraph P2["② Lobby · ห้องภาคคอม"]
+    LB["โชว์ห้องภาค<br/>สัตว์ที่ฟักได้เดินไปมา"]
+    LB --> LB0{"มีสัตว์แล้วหรือยัง?"}
+    LB0 -- "ยังไม่มี" --> LB1["ห้องว่าง + ข้อความชวนเริ่มอ่าน"]
+    LB0 -- "มีแล้ว" --> LB2["วาดสัตว์ตาม level<br/>level สูง = ตัวใหญ่ขึ้น"]
+    LB1 --> LBA
+    LB2 --> LBA
+    LBA{"ผู้ใช้กดอะไร"}
+    LBA -- "HOW TO" --> HT["popup How to Play"] --> LBA
+    LBA -- "START FOCUS" --> SP["popup ตั้งค่า<br/>ใส่ชื่อวิชา + ดู Egg Rate"]
+    SP --> SP1{"ใส่ชื่อวิชาแล้ว?"}
+    SP1 -- "ยัง" --> SP2["เตือนให้ใส่ชื่อวิชา"] --> SP
+    SP1 -- "BACK" --> LBA
+  end
+
+  SP1 -- "START" --> F
+
+  subgraph P3["③ Focus · ฟักไข่"]
+    F["นาฬิกาเริ่มนับขึ้น 00:00<br/>ไข่อยู่กลางจอ"]
+    F --> FT["ทุก 1 วินาที อัปเดตเวลา"]
+    FT --> FM{"ครบ 15 / 30 / 60 นาที?"}
+    FM -- "ครบ" --> FB["CPEGO bubble เด้ง<br/>บอกว่าปลดล็อกไข่ระดับไหน<br/>ไข่เปลี่ยนรูปตามระดับ"] --> FT
+    FM -- "ยัง" --> FT
+    FT -.->|"กด STOP"| FS{"Are you sure to stop?"}
+    FS -- "NO" --> FT
+    FS -- "YES" --> FC{"เวลารวม ≥ 15 นาที?"}
+    FC -- "ใช่" --> FE["popup Choose an egg<br/>ไข่ที่ยังไม่ปลดล็อกเป็นสีเทา"]
+    FE --> FE1{"ยืนยันเลือกไข่นี้?"}
+    FE1 -- "NO" --> FE
+  end
+
+  FC -- "ไม่ถึง" --> RF
+  FE1 -- "YES" --> H
+
+  subgraph P4["④ Hatch / Result"]
+    H["สุ่ม rarity ตามน้ำหนักของไข่<br/>แล้วสุ่มสัตว์ใน rarity นั้น"]
+    H --> HA["Animation: ไข่สั่น → แตก → TADA"]
+    HA --> HN{"เคยมีตัวนี้แล้ว?"}
+    HN -- "ยังไม่มี" --> HN1["เพิ่มเข้าห้องภาค level 1"]
+    HN -- "มีแล้ว" --> HN2["level +1 ตัวใหญ่ขึ้น"]
+    HN1 --> RS
+    HN2 --> RS
+    RS["Congrats! You got ...<br/>ชื่อสัตว์ + rarity + วิชา + เวลาที่อ่าน"]
+    RF["ไข่ยังไม่ฟัก<br/>วิชา + เวลาที่อ่าน + ต้องอ่านอีกกี่นาที"]
+  end
+
+  RS -- "RETURN TO LOBBY" --> LB
+  RF -- "RETURN TO LOBBY" --> LB
+```
+
+## ลำดับหน้า (สรุป)
+
+```mermaid
+flowchart LR
+  A["① Landing"] -- "START" --> B["② Lobby"]
+  B -- "START FOCUS + ใส่วิชา" --> C["③ Focus"]
+  C -- "STOP ≥ 15 นาที + เลือกไข่" --> D["④ Hatch / Result<br/>สำเร็จ"]
+  C -- "STOP < 15 นาที" --> E["④ Result<br/>ไม่สำเร็จ"]
+  D -- "RETURN TO LOBBY" --> B
+  E -- "RETURN TO LOBBY" --> B
+```
+
+## Feature ของแต่ละหน้า
+
+### ① Landing
+- โลโก้ + ชื่อเกม
+- ปุ่ม `START` ไป Lobby
+
+### ② Lobby
+- ห้องภาคพร้อมสัตว์ที่ฟักได้ในรอบการเล่นนี้ เดินสุ่มไปมาแบบง่าย ขนาดตาม level
+- ปุ่ม `HOW TO` เปิด popup อธิบายวิธีเล่น
+- ปุ่ม `START FOCUS` เปิด popup ใส่ชื่อวิชา + ดู Egg Rate แล้วกด `START` ไปหน้า Focus
+
+### ③ Focus
+- นาฬิกานับขึ้น (นาที:วินาที)
+- รูปไข่เปลี่ยนตามระดับที่ปลดล็อก
+- CPEGO bubble เด้งตอนครบ 15 / 30 / 60 นาที แล้วหายเอง
+- ปุ่ม `STOP` → popup ยืนยัน → ถ้าถึง 15 นาทีเปิด popup `Choose an egg` + ยืนยัน
+
+### ④ Hatch / Result
+- สุ่มสัตว์ + animation ฟักไข่
+- ได้ตัวใหม่ → เพิ่มเข้าห้องภาค · ได้ตัวซ้ำ → level +1
+- สรุปผล: สัตว์ที่ได้, วิชา, เวลาที่อ่าน
+- ถ้าไม่ถึง 15 นาที โชว์หน้าไม่สำเร็จแทน
+- ปุ่ม `RETURN TO LOBBY`
+
+## กติกาเกม Phase 1
+
+| ไข่ | เวลาขั้นต่ำ | Common | Rare | Epic | Legendary |
+|---|---|---|---|---|---|
+| ไข่รุ่นเรา | 15 นาที | 70% | 25% | 5% | 0% |
+| ไข่รุ่นพี่ | 30 นาที | 40% | 40% | 17% | 3% |
+| ไข่อาจารย์ | 60 นาที | 10% | 40% | 35% | 15% |
+
+## สิ่งที่ตัดสินใจแทนไว้ (แก้ได้)
+
+- หน้า Set up เดิมย่อเป็น popup ใน Lobby และหน้า Summary เดิมย่อเป็น popup `Choose an egg` ในหน้า Focus จะได้เหลือ 4 หน้าตามแผน
+- ไม่มี database ข้อมูลทั้งหมด (สัตว์ในห้องภาค, รอบที่กำลังอ่าน) อยู่ใน object เดียวใน memory ปิดแอปแล้วเริ่มใหม่ Phase 2 ค่อยเปลี่ยนไปบันทึกลง database
+- ตอนเดโมควรมีโหมดเร่งเวลา (เช่น 1 วินาที = 1 นาที) ไม่ต้องนั่งรอ 15 นาทีจริง
