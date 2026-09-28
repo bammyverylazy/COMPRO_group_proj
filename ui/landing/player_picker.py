@@ -52,7 +52,6 @@ class PlayerPicker(BaseWidget):
         if self.error_text is not None:
             self.error_text.value = message
             self.error_text.visible = True
-            # ✅ เช็กว่า control อยู่บน page แล้วหรือยังก่อนสั่ง update / refresh
             if self.error_text.page is not None:
                 self.error_text.update()
 

@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 
 class BaseView(ABC):
-    #class variables
     route: ClassVar[str] = "/"
     requires_player: ClassVar[bool] = True
 
@@ -32,8 +31,8 @@ class BaseView(ABC):
 
     def show_error(self, error: AppError) -> None:
         snack_bar = ft.SnackBar(
-            content=ft.Text(error.message, color=ft.colors.WHITE),
-            bgcolor=ft.colors.RED_600,
+            content=ft.Text(error.message, color=ft.Colors.WHITE),
+            bgcolor=ft.Colors.RED_600,
         )
         self.ctx.page.overlay.append(snack_bar)
         snack_bar.open = True
