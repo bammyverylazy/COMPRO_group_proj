@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+# run ->>>>   py -3.14 -m pytest tests/test_b1_core.py
 import pytest
 
 from app.config import Settings
