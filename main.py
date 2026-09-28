@@ -2,7 +2,7 @@ from __future__ import annotations
 import flet as ft
 
 # --- Backend Services (B1, B2, B3) ---
-from app.data.clock import Clock
+from app.core.clock import Clock
 from app.data.game_store import GameStore
 from app.services.analytics_service import AnalyticsService
 from app.services.dex_service import DexService
