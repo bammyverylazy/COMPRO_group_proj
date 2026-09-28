@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
 from datetime import datetime
+from typing import Any
 
 from ..dto import PetDTO
-from .species import Species
 from .pet_policy import PetLevelPolicy
+from .species import Species
 
 
 class OwnedPet:
@@ -47,7 +47,7 @@ class OwnedPet:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]) -> "OwnedPet":
         return cls(
             player_id=data["player_id"],
             species_code=data["species_code"],

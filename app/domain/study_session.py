@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Any
 from datetime import datetime, timezone
+from typing import Any
 
 from ..dto import SessionDTO
-from ..core.clock import Clock
-from .enums import SessionStatus, EggTier
+from .enums import EggTier, SessionStatus
 
 
 class StudySession:
@@ -36,21 +35,18 @@ class StudySession:
     def stop(
         self,
         ended_at: datetime,
+        duration_sec: int,
         min_success_sec: int,
     ):
-        clock = Clock()
-
         self.ended_at = ended_at
-
-        self.duration_sec = clock.elapsed_sec(
-            self.started_at,
-            self.ended_at,
-        )
+        self.duration_sec = duration_sec
 
         if self.duration_sec >= min_success_sec:
             self.status = SessionStatus.READY_TO_HATCH
         else:
             self.status = SessionStatus.FAILED
+
+        return self.status
 
     def can_hatch(self):
         return self.status == SessionStatus.READY_TO_HATCH
@@ -84,14 +80,29 @@ class StudySession:
             "started_at": self.started_at.isoformat(),
             "status": self.status.value,
             "room_id": self.room_id,
+            "ended_at": self.ended_at.isoformat() if self.ended_at else None,
+            "duration_sec": self.duration_sec,
+            "tier": self.tier.value if self.tier else None,
+            "species_code": self.species_code,
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]):
-        return cls(
+        session = cls(
             id=data["id"],
             player_id=data["player_id"],
             subject=data["subject"],
             started_at=datetime.fromisoformat(data["started_at"]),
-            room_id=data["room_id"],
+            room_id=data.get("room_id"),
         )
+
+        session.status = SessionStatus(data["status"])
+        session.ended_at = (
+            datetime.fromisoformat(data["ended_at"])
+            if data.get("ended_at") is not None
+            else None
+        )
+        session.duration_sec = data.get("duration_sec", 0)
+        session.tier = EggTier(data["tier"]) if data.get("tier") is not None else None
+        session.species_code = data.get("species_code")
+        return session
