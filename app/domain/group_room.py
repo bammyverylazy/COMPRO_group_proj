@@ -55,7 +55,7 @@ class GroupRoom:
             id=self.id,
             subject=self.subject,
             members=members,
-            started_at=self.started_at,
+            started_at=self.started_at.isoformat(),
             status=self.status,
             session_ids=self.session_ids,
         )

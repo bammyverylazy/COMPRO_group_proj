@@ -79,7 +79,7 @@ class RoomDTO:
     id: int
     subject: str
     members: list[PlayerDTO]
-    started_at: datetime
+    started_at: str
     status: RoomStatus
     session_ids: list[int]
 
