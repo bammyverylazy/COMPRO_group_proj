@@ -20,11 +20,12 @@ class PixelButton(BaseWidget):
         self.disabled = disabled
 
     def build(self) -> ft.Control:
-        return ft.ElevatedButton(
-            text=self.text,
+        return ft.FilledButton(
+            content=ft.Text(self.text, color=ft.Colors.WHITE),
             disabled=self.disabled,
-            bgcolor=_VARIANT_COLORS.get(self.variant, Theme.PRIMARY),
-            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(
+                bgcolor=_VARIANT_COLORS.get(self.variant, Theme.PRIMARY),
+            ),
             on_click=lambda _: self.on_click(),
         )
 
@@ -105,8 +106,8 @@ class ConfirmDialog:
             modal=True,
             title=ft.Text(self.title),
             actions=[
-                ft.TextButton("NO", on_click=handle_no),
-                ft.TextButton("YES", on_click=handle_yes),
+                ft.TextButton(content=ft.Text("NO"), on_click=handle_no),
+                ft.TextButton(content=ft.Text("YES"), on_click=handle_yes),
             ],
         )
         page.overlay.append(self._dialog)

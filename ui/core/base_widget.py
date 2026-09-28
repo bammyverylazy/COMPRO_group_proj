@@ -18,5 +18,6 @@ class BaseWidget(ABC):
         return self._control
 
     def refresh(self) -> None:
-        self.control.update()
+        if self._control is not None and self._control.page is not None:
+            self.control.update()
 
