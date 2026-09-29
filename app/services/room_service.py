@@ -1,145 +1,111 @@
 from __future__ import annotations
+
 from app.config import Settings
 from app.core.clock import Clock
-
+from app.data.game_store import GameStore
 from app.domain.enums import RoomStatus
 from app.domain.group_room import GroupRoom
+from app.domain.study_session import StudySession
 from app.domain.tier_odds_table import TierOddsTable
 from app.dto import RoomDTO, RoomHatchResult, RoomStopResult
-from app.errors import InvalidStateError, NotFoundError, ValidationError
+from app.errors import InvalidStateError, ValidationError
 from app.services.hatch_service import HatchService
 
 
 class RoomService:
-    
-    def __init__(self, store: GameStore, clock: Clock, settings: Settings, hatch_service: HatchService):
+    def __init__(self, store: GameStore, clock: Clock, settings: Settings, hatch_service: HatchService) -> None:
         self.store = store
         self.clock = clock
         self.settings = settings
-        self.odds_table = TierOddsTable()
         self.hatch_service = hatch_service
-        
-        
+        self.odds_table = TierOddsTable()
+
     def create_room(self, member_ids: list[int], subject: str) -> RoomDTO:
-        
-        if not subject or not subject.strip():
-            raise ValidationError(field="subject")
-
-        if len(member_ids) < self.settings.room_min_members:
-            raise ValidationError(field="member_ids")
-
-        if len(member_ids) > self.settings.room_max_members:
-            raise ValidationError(field="member_ids")
-
-        if len(member_ids) != len(set(member_ids)):
-            raise ValidationError(field="member_ids")
-
-        for player_id in member_ids:
-            running = self.store.find_running_session(player_id)
-
-            if running is not None:
-                raise InvalidStateError(f"Player {player_id} already has a running session")
-
+        clean_subject = subject.strip()
+        if not clean_subject:
+            raise ValidationError("กรุณาใส่ชื่อวิชา", field="subject")
+        self._validate_members(member_ids)
         started_at = self.clock.now()
-
+        session_ids: list[int] = []
+        room_id = self.store.rooms.next_id()
+        for player_id in member_ids:
+            session = StudySession(
+                id=self.store.sessions.next_id(),
+                player_id=player_id,
+                subject=clean_subject,
+                started_at=started_at,
+                room_id=room_id,
+            )
+            self.store.sessions.add(session)
+            session_ids.append(session.id)
         room = GroupRoom(
-            member_ids=member_ids,
-            subject=subject.strip(),
+            id=room_id,
+            subject=clean_subject,
+            member_ids=list(member_ids),
+            session_ids=session_ids,
             started_at=started_at,
         )
-
-        self.store.add_group_room(room)
-
-        for player_id in member_ids:
-            self.store.create_study_session(
-                player_id=player_id,
-                subject=subject.strip(),
-                room_id=room.id,
-                started_at=started_at,
-            )
-
+        self.store.rooms.add(room)
         self.store.save()
-
-        return room.to_dto()
-
+        return self._to_dto(room)
 
     def get_room(self, room_id: int) -> RoomDTO:
-        room = self.store.get_group_room(room_id)
-
-        if room is None:
-            raise NotFoundError("Room not found")
-
-        return room.to_dto()
-
+        return self._to_dto(self.store.rooms.get(room_id))
 
     def elapsed(self, room_id: int) -> int:
-        room = self.store.get_group_room(room_id)
-
-        if room is None:
-            raise NotFoundError("Room not found")
-
+        room = self.store.rooms.get(room_id)
+        if room.ended_at is not None:
+            return room.duration_sec
         return self.clock.elapsed_sec(room.started_at)
 
-
     def stop(self, room_id: int) -> RoomStopResult:
-        room = self.store.get_group_room(room_id)
-
-        if room is None:
-            raise NotFoundError("Room not found")
-
-        duration = self.clock.elapsed_sec(room.started_at)
+        room = self.store.rooms.get(room_id)
+        if room.status is not RoomStatus.RUNNING:
+            raise InvalidStateError("ห้องนี้หยุดไปแล้ว")
         ended_at = self.clock.now()
-
-        room.stop(
-            ended_at=ended_at,
-            elapsed_sec=duration,
-        )
-
-        sessions = self.store.get_room_sessions(room_id)
-
-        for session in sessions:
-            session.stop(
-                ended_at=ended_at,
-                elapsed_sec=duration,
-            )
-
+        duration_sec = self.clock.elapsed_sec(room.started_at)
+        min_success_sec = self._min_success_sec()
+        status = room.stop(ended_at, duration_sec, min_success_sec)
+        for session_id in room.session_ids:
+            session = self.store.sessions.get(session_id)
+            if session.is_running():
+                session.stop(ended_at, duration_sec, min_success_sec)
         self.store.save()
-
+        tier_odds = self.odds_table.odds_for(duration_sec) if status is RoomStatus.READY_TO_HATCH else {}
         return RoomStopResult(
-            room=room.to_dto(),
-            duration=duration,
+            room_id=room.id,
+            status=status,
+            duration_sec=duration_sec,
+            tier_odds=dict(tier_odds),
         )
-
 
     def hatch(self, room_id: int) -> RoomHatchResult:
-        room = self.store.get_group_room(room_id)
-
-        if room is None:
-            raise NotFoundError("Room not found")
-
-        if room.status != RoomStatus.READY:
-            raise InvalidStateError("Room is not ready")
-
-        duration = self.clock.elapsed_sec(room.started_at)
-
-        tier = self.hatch_service.roll_tier(duration)
-
-        sessions = self.store.get_room_sessions(room_id)
-
-        results = []
-
-        for session in sessions:
-            result = self.hatch_service.hatch(
-                session.id,
-                tier,
-            )
-            results.append(result)
-
-        room.mark_hatched()
-
+        room = self.store.rooms.get(room_id)
+        if not room.can_hatch():
+            raise InvalidStateError("ห้องนี้ยังฟักไข่ไม่ได้")
+        tier = self.hatch_service.roll_tier(room.duration_sec)
+        results = [self.hatch_service.hatch(session_id, tier) for session_id in room.session_ids]
+        room.mark_hatched(tier)
         self.store.save()
+        return RoomHatchResult(room_id=room.id, tier=tier, results=results)
 
-        return RoomHatchResult(
-            room=room.to_dto(),
-            results=results,
-        )
+    def _validate_members(self, member_ids: list[int]) -> None:
+        count = len(member_ids)
+        if count < self.settings.min_room_members or count > self.settings.max_room_members:
+            raise ValidationError(
+                f"สมาชิกต้องมี {self.settings.min_room_members}-{self.settings.max_room_members} คน",
+                field="member_ids",
+            )
+        if len(set(member_ids)) != count:
+            raise ValidationError("เลือกสมาชิกซ้ำ", field="member_ids")
+        for player_id in member_ids:
+            player = self.store.players.get(player_id)
+            if self.store.sessions.get_running(player_id) is not None:
+                raise InvalidStateError(f"{player.nickname} มีรอบที่อ่านค้างอยู่")
+
+    def _to_dto(self, room: GroupRoom) -> RoomDTO:
+        members = [self.store.players.get(player_id).to_dto() for player_id in room.member_ids]
+        return room.to_dto(members)
+
+    def _min_success_sec(self) -> int:
+        return self.settings.min_success_minutes * 60

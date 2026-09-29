@@ -1,71 +1,77 @@
 from __future__ import annotations
+
 from datetime import date
+
 from app.config import Settings
 from app.data.game_store import GameStore
+from app.domain.enums import SessionStatus
 from app.domain.pet_policy import PetLevelPolicy
 from app.domain.stats_calculator import StatsCalculator
-from app.domain.enums import SessionStatus
-from app.dto import History, HistoryStats, SessionReport
+from app.domain.study_session import StudySession
+from app.dto import History, PetDTO, SessionReport
 from app.errors import InvalidStateError
 
 
 class AnalyticsService:
-    def __init__(self, store: GameStore, settings: Settings):
+    FINISHED: tuple[SessionStatus, ...] = (SessionStatus.FAILED, SessionStatus.HATCHED)
+
+    def __init__(self, store: GameStore, settings: Settings) -> None:
         self.store = store
         self.settings = settings
         self.policy = PetLevelPolicy()
         self.calculator = StatsCalculator()
+
     def session_report(self, session_id: int) -> SessionReport:
-        session = self.store.get_session(session_id)
-        if session.status in (SessionStatus.RUNNING, SessionStatus.READY_TO_HATCH):
-            raise InvalidStateError("Session is still running or waiting to hatch")
-
-        min_success = self.settings.MIN_SUCCESS_SEC
-        duration = session.duration_sec
-        remaining_sec = max(0, min_success - duration)
-
-        exp_gained = 0
-        current_level = 1
-        current_scale = 1.0
-
-        if session.hatched_species_code:
-            pet = self.store.get_owned_pet_by_species(session.player_id, session.hatched_species_code)
-            if pet:
-                exp_gained = self.settings.EXP_PER_HATCH
-                current_level = self.policy.calculate_level(pet.total_exp)
-                current_scale = self.policy.calculate_scale(current_level)
-
+        session = self.store.sessions.get(session_id)
+        if session.status not in self.FINISHED:
+            raise InvalidStateError("รอบนี้ยังไม่จบ")
+        min_success_sec = self.settings.min_success_minutes * 60
+        remaining_sec = max(0, min_success_sec - session.duration_sec) if session.status is SessionStatus.FAILED else 0
         return SessionReport(
             session_id=session.id,
             player_id=session.player_id,
             subject=session.subject,
+            status=session.status,
+            is_success=session.is_success(),
+            duration_sec=session.duration_sec,
             started_at=session.started_at,
             ended_at=session.ended_at,
-            duration_sec=duration,
-            status=session.status,
-            min_success_sec=min_success,
             remaining_sec=remaining_sec,
-            tier=session.hatched_tier,
-            species_code=session.hatched_species_code,
-            exp_gained=exp_gained,
-            current_level=current_level,
-            current_scale=current_scale
+            tier=session.tier,
+            pet=self._pet_for(session),
+            is_new=self._is_new(session),
+            room_id=session.room_id,
         )
 
     def room_reports(self, room_id: int) -> list[SessionReport]:
-        sessions = self.store.get_sessions_by_room_id(room_id)
-        return [self.session_report(session.id) for session in sessions]
-    def history(self, player_id: int) -> History:
-        all_sessions = self.store.get_sessions_by_player_id(player_id)
-        finished_sessions = [
-            s for s in all_sessions 
-            if s.status in (SessionStatus.FAILED, SessionStatus.HATCHED)
-        ]
-        
-        reports = [self.session_report(session.id) for session in finished_sessions]
-        stats = self.calculator.compute(reports, date.today())
+        room = self.store.rooms.get(room_id)
+        return [self.session_report(session_id) for session_id in room.session_ids]
 
-        return History(
-            reports=reports,
-            stats=stats
-        )
+    def history(self, player_id: int) -> History:
+        sessions = [
+            session
+            for session in self.store.sessions.list_by_player(player_id)
+            if session.status in self.FINISHED
+        ]
+        reports = [self.session_report(session.id) for session in sessions]
+        return History(reports=reports, stats=self.calculator.compute(reports, date.today()))
+
+    def _pet_for(self, session: StudySession) -> PetDTO | None:
+        if session.species_code is None:
+            return None
+        pet = self.store.pets.find_owned(session.player_id, session.species_code)
+        species = self.store.species.find(session.species_code)
+        if pet is None or species is None:
+            return None
+        return pet.to_dto(species, self.policy)
+
+    def _is_new(self, session: StudySession) -> bool | None:
+        if session.species_code is None:
+            return None
+        same_species = [
+            other
+            for other in self.store.sessions.list_by_player(session.player_id)
+            if other.species_code == session.species_code
+        ]
+        first = min(same_species, key=lambda other: (other.ended_at or other.started_at, other.id))
+        return first.id == session.id

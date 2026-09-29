@@ -1,25 +1,20 @@
 from __future__ import annotations
+
+from app.data.game_store import GameStore
 from app.domain.pet_policy import PetLevelPolicy
 from app.dto import PetDTO
 
+
 class SanctuaryService:
-    def __init__(self, store: GameStore):
+    def __init__(self, store: GameStore) -> None:
         self.store = store
         self.policy = PetLevelPolicy()
 
     def list_pets(self, player_id: int) -> list[PetDTO]:
-        pets = self.store.get_owned_pets(player_id)
-
-        result: list[PetDTO] = []
-
-        for pet in pets:
-            result.append(
-                pet.to_dto(level=self.policy.level_for(pet),scale=self.policy.scale_for(pet))
-            )
-
-        return result
+        return [
+            pet.to_dto(self.store.species.get(pet.species_code), self.policy)
+            for pet in self.store.pets.list_by_player(player_id)
+        ]
 
     def count_pets(self, player_id: int) -> int:
-        pets = self.store.get_owned_pets(player_id)
-
-        return len(pets)
+        return len(self.store.pets.list_by_player(player_id))

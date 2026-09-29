@@ -9,83 +9,65 @@ from app.domain.tier_odds_table import TierOddsTable
 from app.dto import SessionDTO, StopResult
 from app.errors import InvalidStateError, ValidationError
 
-class FocusSessionService:
 
-    def __init__(self, store: GameStore, clock: Clock, settings: Settings):
+class FocusSessionService:
+    def __init__(self, store: GameStore, clock: Clock, settings: Settings) -> None:
         self.store = store
         self.clock = clock
         self.settings = settings
         self.odds_table = TierOddsTable()
-        
 
     def start(self, player_id: int, subject: str, room_id: int | None = None) -> SessionDTO:
-
-        if not subject:
-            raise ValidationError(field="subject")
-
-        if self.get_running(player_id) is not None:
-            raise InvalidStateError()
-
+        clean_subject = subject.strip()
+        if not clean_subject:
+            raise ValidationError("กรุณาใส่ชื่อวิชา", field="subject")
+        self.store.players.get(player_id)
+        if self.store.sessions.get_running(player_id) is not None:
+            raise InvalidStateError("ผู้เล่นมีรอบที่อ่านค้างอยู่")
         session = StudySession(
+            id=self.store.sessions.next_id(),
             player_id=player_id,
-            subject=subject,
+            subject=clean_subject,
+            started_at=self.clock.now(),
             room_id=room_id,
-            started_at=self.clock.now()
         )
-
-        self.store.save(session)
-
+        self.store.sessions.add(session)
+        self.store.save()
         return session.to_dto()
-    
 
     def get_running(self, player_id: int) -> SessionDTO | None:
-
-        sessions = self.store.get_sessions(player_id)
-
-        for session in sessions:
-            if session.status == SessionStatus.RUNNING:
-                return session.to_dto()
-
-        return None
-
+        session = self.store.sessions.get_running(player_id)
+        return session.to_dto() if session is not None else None
 
     def elapsed(self, session_id: int) -> int:
-
-        session = self.store.get_session(session_id)
-        
+        session = self.store.sessions.get(session_id)
+        if session.ended_at is not None:
+            return session.duration_sec
         return self.clock.elapsed_sec(session.started_at)
 
-
     def stop(self, session_id: int) -> StopResult:
-
-        session = self.store.get_session(session_id)
-
-        elapsed = self.clock.elapsed_sec(session.started_at)
-
-        tier_odds = self.odds_table.get_odds(elapsed)
-
-        result = session.stop(
-            elapsed=elapsed,
-            tier_odds=tier_odds
+        session = self.store.sessions.get(session_id)
+        if not session.is_running():
+            raise InvalidStateError("รอบนี้หยุดไปแล้ว")
+        duration_sec = self.clock.elapsed_sec(session.started_at)
+        status = session.stop(self.clock.now(), duration_sec, self._min_success_sec())
+        self.store.save()
+        tier_odds = self.odds_table.odds_for(duration_sec) if status is SessionStatus.READY_TO_HATCH else {}
+        return StopResult(
+            session_id=session.id,
+            status=status,
+            duration_sec=duration_sec,
+            tier_odds=dict(tier_odds),
         )
 
-        self.store.save(session)
-
-        return result
-
-
     def recent_subjects(self, player_id: int, limit: int = 5) -> list[str]:
-
-        sessions = self.store.get_sessions(player_id)
-        result = []
-
-        for session in reversed(sessions):
-
-            if session.subject not in result:
-                result.append(session.subject)
-
-            if len(result) == limit:
+        subjects: list[str] = []
+        for session in self.store.sessions.list_by_player(player_id):
+            if session.subject not in subjects:
+                subjects.append(session.subject)
+            if len(subjects) == limit:
                 break
+        return subjects
 
-        return result
-    
+    def _min_success_sec(self) -> int:
+        return self.settings.min_success_minutes * 60
