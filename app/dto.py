@@ -3,29 +3,29 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from domain.enums import EggTier, Rarity, SessionStatus, RoomStatus
+from app.domain.enums import EggTier, Rarity, RoomStatus, SessionStatus
 
 
-@dataclass(frozen=True)
+@dataclass
 class PlayerDTO:
     id: int
     nickname: str
-    
+
     def __str__(self):
         return f"id : {self.id}, nickname : {self.nickname}"
 
 
-@dataclass(frozen=True)
+@dataclass
 class SpeciesDTO:
     code: str
     name: str
     tier: EggTier
     rarity: Rarity
     sprite_path: str
-    description: str
+    description: str = ""
 
 
-@dataclass(frozen=True)
+@dataclass
 class TierInfo:
     tier: EggTier
     name_th: str
@@ -33,14 +33,14 @@ class TierInfo:
     image_path: str
 
 
-@dataclass(frozen=True)
+@dataclass
 class TierOdds:
     min_minutes: int
     max_minutes: int | None
     weights: dict[EggTier, int]
 
 
-@dataclass(frozen=True)
+@dataclass
 class SessionDTO:
     id: int
     player_id: int
@@ -50,7 +50,7 @@ class SessionDTO:
     room_id: int | None
 
 
-@dataclass(frozen=True)
+@dataclass
 class StopResult:
     session_id: int
     status: SessionStatus
@@ -58,14 +58,14 @@ class StopResult:
     tier_odds: dict[EggTier, int]
 
 
-@dataclass(frozen=True)
+@dataclass
 class PetDTO:
     species: SpeciesDTO
     level: int
     scale: float
 
 
-@dataclass(frozen=True)
+@dataclass
 class HatchResult:
     session_id: int
     player_id: int
@@ -74,17 +74,17 @@ class HatchResult:
     is_new: bool
 
 
-@dataclass(frozen=True)
+@dataclass
 class RoomDTO:
     id: int
     subject: str
     members: list[PlayerDTO]
-    started_at: datetime
+    started_at: str
     status: RoomStatus
     session_ids: list[int]
 
 
-@dataclass(frozen=True)
+@dataclass
 class RoomStopResult:
     room_id: int
     status: RoomStatus
@@ -92,14 +92,14 @@ class RoomStopResult:
     tier_odds: dict[EggTier, int]
 
 
-@dataclass(frozen=True)
+@dataclass
 class RoomHatchResult:
     room_id: int
     tier: EggTier
     results: list[HatchResult]
 
 
-@dataclass(frozen=True)
+@dataclass
 class DexEntry:
     species: SpeciesDTO
     unlocked: bool
@@ -109,7 +109,7 @@ class DexEntry:
     subjects: list[str] = field(default_factory=list)
 
 
-@dataclass(frozen=True)
+@dataclass
 class SessionReport:
     session_id: int
     player_id: int
@@ -126,7 +126,7 @@ class SessionReport:
     room_id: int | None = None
 
 
-@dataclass(frozen=True)
+@dataclass
 class HistoryStats:
     total_sessions: int
     success_count: int
@@ -138,7 +138,7 @@ class HistoryStats:
     daily_study_sec: dict[str, int]
 
 
-@dataclass(frozen=True)
+@dataclass
 class History:
     reports: list[SessionReport]
     stats: HistoryStats
