@@ -6,7 +6,7 @@ from app.core.clock import Clock
 from app.data.game_store import GameStore
 from app.services.analytics_service import AnalyticsService
 from app.services.dex_service import DexService
-from app.services.focus_session_service import FocusSessionService
+from app.services.focus_service import FocusSessionService
 from app.services.hatch_service import HatchService
 from app.services.player_service import PlayerService
 from app.services.room_service import RoomService
