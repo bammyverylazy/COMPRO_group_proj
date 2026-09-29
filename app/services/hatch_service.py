@@ -1,6 +1,8 @@
 from datetime import datetime
 
+from app.data.game_store import GameStore
 from app.domain.egg_factory import EggFactory
+from app.domain.enums import EggTier
 from app.domain.gacha import GachaMachine
 from app.domain.owned_pet import OwnedPet
 from app.domain.pet_policy import PetLevelPolicy
@@ -10,14 +12,14 @@ from app.dto import HatchResult
 from app.errors import InvalidStateError
 
 class HatchService:
-    def __init__(self, store):
+    def __init__(self, store: GameStore):
         self.store = store
         self.factory = EggFactory()
         self.odds_table = TierOddsTable()
         self.gacha = GachaMachine()
         self.policy = PetLevelPolicy()
         
-    def roll_tier(self, duration_sec: int):
+    def roll_tier(self, duration_sec: int) -> EggTier:
         odds = self.odds_table.odds_for(duration_sec)
 
         if not odds:
@@ -25,7 +27,7 @@ class HatchService:
 
         return self.gacha.pick_tier(odds)
     
-    def hatch(self, session_id: int, tier=None):
+    def hatch(self, session_id: int, tier: EggTier | None = None) -> HatchResult:
         session = self.store.sessions.get(session_id)
 
         if not session.can_hatch():
@@ -51,7 +53,7 @@ class HatchService:
             is_new=is_new,
         )
         
-    def _give_pet(self, player_id: int, species: Species):
+    def _give_pet(self, player_id: int, species: Species) -> tuple[OwnedPet, bool]:
         existing = self.store.pets.find_owned(
             player_id,
             species.code,

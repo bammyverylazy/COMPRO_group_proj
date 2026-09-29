@@ -43,7 +43,7 @@ class TierOddsTable:
             ),
         ]
         
-    def bracket_for(self, duration_sec):
+    def bracket_for(self, duration_sec) -> TierOdds | None:
         duration_minutes = duration_sec // 60
 
         for bracket in self._brackets:
@@ -55,7 +55,7 @@ class TierOddsTable:
 
         return None
     
-    def odds_for(self, duration_sec):
+    def odds_for(self, duration_sec) -> dict[EggTier, int]:
         bracket = self.bracket_for(duration_sec)
 
         if bracket is None:
@@ -63,7 +63,7 @@ class TierOddsTable:
 
         return bracket.weights
     
-    def next_bracket(self, duration_sec):
+    def next_bracket(self, duration_sec) -> TierOdds | None:
         bracket = self.bracket_for(duration_sec)
 
         if bracket is None:
@@ -72,5 +72,5 @@ class TierOddsTable:
         index = self._brackets.index(bracket)
         return self._brackets[index + 1] if index + 1 < len(self._brackets) else None
     
-    def all_brackets(self):
+    def all_brackets(self) -> list[TierOdds]:
         return self._brackets

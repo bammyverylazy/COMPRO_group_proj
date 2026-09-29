@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 
 from app.domain.enums import EggTier, Rarity
 from app.domain.species import Species
@@ -22,8 +22,12 @@ class Egg(ABC):
             rarity_weights=self.rarity_weights(),
             image_path=self.image_path,
         )
-        
-    def roll_species(self, pool: list[Species], gacha: GachaMachine) -> Species:
+
+    def roll_species(
+        self,
+        pool: list[Species],
+        gacha: GachaMachine,
+    ) -> Species:
         rarity = gacha.pick_rarity(self.rarity_weights())
         return gacha.pick_species(pool, rarity)
 
