@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from ..dto import SessionDTO
-from .enums import EggTier, SessionStatus
+from ..services.app.dto import SessionDTO
+from ..core.clock import Clock
+from .enums import SessionStatus, EggTier
 
 
 class StudySession:

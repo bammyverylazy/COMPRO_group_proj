@@ -1,7 +1,7 @@
 from __future__ import annotations
-
-from typing import Any
-
+from ..services.dto import SpeciesDTO
+from .enums import EggTier,Rarity
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from ..dto import SpeciesDTO

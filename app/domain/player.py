@@ -1,10 +1,7 @@
 from __future__ import annotations
-
 from datetime import datetime, timezone
 from typing import Any
-
-from ..dto import PlayerDTO
-
+from app.dto import PlayerDTO
 
 class Player:
     def __init__(self, id: int, nickname: str, created_at: datetime | None = None):
@@ -13,11 +10,14 @@ class Player:
         if created_at is None:
             created_at = datetime.now(timezone.utc)
         self.created_at = created_at
-
-    def to_dto(self) -> PlayerDTO:
-        return PlayerDTO(id=self.id, nickname=self.nickname)
-
-    def to_dict(self) -> dict[str, Any]:
+        
+    def to_dto(self): # Player → PlayerDTO
+        return PlayerDTO(
+    id=self.id,
+    nickname=self.nickname
+) 
+        #return PlayerDTO
+    def to_dict(self): # Player → dict
         return {
             "id": self.id,
             "nickname": self.nickname,
