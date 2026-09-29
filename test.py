@@ -1,4 +1,4 @@
-from COMPRO_group_proj.app.services.app.config import Settings
+from .app.config import Settings
 from app.core.clock import Clock
 from app.domain.player import Player
 
