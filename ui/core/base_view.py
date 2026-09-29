@@ -39,4 +39,4 @@ class BaseView(ABC):
         self.ctx.page.update()
 
     def to_view(self) -> ft.View:
-        return ft.View(self.route,[self.build()])
+        return ft.View(route=self.route, controls=[self.build()])
