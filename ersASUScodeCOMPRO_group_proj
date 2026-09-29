@@ -1,0 +1,30 @@
+[33m8991d97[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: repositories.py import
+[33m551b20c[m Merge pull request #8 from bammyverylazy/B1.2_JANJUAY
+[33ma8e0a3e[m[33m ([m[1;31morigin/B1.2_JANJUAY[m[33m, [m[1;32mB1.2_JANJUAY[m[33m)[m Merge pull request #7 from bammyverylazy/B1.2_JANJUAY_tmp
+[33m9539143[m[33m ([m[1;31morigin/B1.2_JANJUAY_tmp[m[33m)[m B1: fill GameStore and PlayerService
+[33m830dffb[m Merge pull request #5 from bammyverylazy/B1.1_BAM
+[33mbb7212b[m B1: add GameStore and PlayerService
+[33m31bc397[m chore: COMMENT test_case for B1.1
+[33m621b088[m fix: test_case for B1.1
+[33m85c01e5[m B1: add SpeciesLoader
+[33meb20545[m fix: fix dto 'started_at' time format
+[33m8991d97[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: repositories.py import
+[33m551b20c[m Merge pull request #8 from bammyverylazy/B1.2_JANJUAY
+[33ma8e0a3e[m[33m ([m[1;31morigin/B1.2_JANJUAY[m[33m, [m[1;32mB1.2_JANJUAY[m[33m)[m Merge pull request #7 from bammyverylazy/B1.2_JANJUAY_tmp
+[33m9539143[m[33m ([m[1;31morigin/B1.2_JANJUAY_tmp[m[33m)[m B1: fill GameStore and PlayerService
+[33m830dffb[m Merge pull request #5 from bammyverylazy/B1.1_BAM
+[33mbb7212b[m B1: add GameStore and PlayerService
+[33m31bc397[m chore: COMMENT test_case for B1.1
+[33m621b088[m fix: test_case for B1.1
+[33m85c01e5[m B1: add SpeciesLoader
+[33meb20545[m fix: fix dto 'started_at' time format
+[33m8991d97[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: repositories.py import
+[33m551b20c[m Merge pull request #8 from bammyverylazy/B1.2_JANJUAY
+[33ma8e0a3e[m[33m ([m[1;31morigin/B1.2_JANJUAY[m[33m, [m[1;32mB1.2_JANJUAY[m[33m)[m Merge pull request #7 from bammyverylazy/B1.2_JANJUAY_tmp
+[33m9539143[m[33m ([m[1;31morigin/B1.2_JANJUAY_tmp[m[33m)[m B1: fill GameStore and PlayerService
+[33m830dffb[m Merge pull request #5 from bammyverylazy/B1.1_BAM
+[33mbb7212b[m B1: add GameStore and PlayerService
+[33m31bc397[m chore: COMMENT test_case for B1.1
+[33m621b088[m fix: test_case for B1.1
+[33m85c01e5[m B1: add SpeciesLoader
+[33meb20545[m fix: fix dto 'started_at' time format

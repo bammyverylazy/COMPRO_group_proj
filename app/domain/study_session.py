@@ -3,9 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from ..services.app.dto import SessionDTO
-from ..core.clock import Clock
-from .enums import SessionStatus, EggTier
+from ..dto import SessionDTO
+from .enums import EggTier, SessionStatus
 
 
 class StudySession:
@@ -104,6 +103,7 @@ class StudySession:
             else None
         )
         session.duration_sec = data.get("duration_sec", 0)
-        session.tier = EggTier(data["tier"]) if data.get("tier") is not None else None
+        session.tier = EggTier(data["tier"]) if data.get(
+            "tier") is not None else None
         session.species_code = data.get("species_code")
         return session

@@ -1,0 +1,37 @@
+[
+  {
+    "code": "debug_duck",
+    "name": "Debug Duck",
+    "tier": "freshman",
+    "rarity": "common",
+    "sprite_path": "sprites/debug_duck.png"
+  },
+  {
+    "code": "loop_lizard",
+    "name": "Loop Lizard",
+    "tier": "freshman",
+    "rarity": "rare",
+    "sprite_path": "sprites/loop_lizard.png"
+  },
+  {
+    "code": "stack_sloth",
+    "name": "Stack Sloth",
+    "tier": "senior",
+    "rarity": "common",
+    "sprite_path": "sprites/stack_sloth.png"
+  },
+  {
+    "code": "kernel_kitsune",
+    "name": "Kernel Kitsune",
+    "tier": "senior",
+    "rarity": "legendary",
+    "sprite_path": "sprites/kernel_kitsune.png"
+  },
+  {
+    "code": "turing_tortoise",
+    "name": "Turing Tortoise",
+    "tier": "professor",
+    "rarity": "legendary",
+    "sprite_path": "sprites/turing_tortoise.png"
+  }
+]
