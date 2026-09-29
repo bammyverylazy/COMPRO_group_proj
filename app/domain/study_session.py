@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 from datetime import datetime, timezone
 
-from ..dto import SessionDTO
+from ..services.app.dto import SessionDTO
 from ..core.clock import Clock
 from .enums import SessionStatus, EggTier
 

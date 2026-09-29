@@ -1,5 +1,5 @@
 from __future__ import annotations
-from ..dto import SpeciesDTO
+from ..services.dto import SpeciesDTO
 from .enums import EggTier,Rarity
 from abc import ABC, abstractmethod
 from dataclasses import dataclass

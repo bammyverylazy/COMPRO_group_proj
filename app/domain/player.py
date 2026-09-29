@@ -1,11 +1,7 @@
 from __future__ import annotations
-from ..dto import PlayerDTO
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Generic, TypeVar
-import json
+from typing import Any
+from app.dto import PlayerDTO
 
 class Player:
     def __init__(self, id:int, nickname:str, created_at = None):
@@ -16,7 +12,7 @@ class Player:
         self.created_at = created_at
         
     def to_dto(self): # Player → PlayerDTO
-        return  PlayerDTO(
+        return PlayerDTO(
     id=self.id,
     nickname=self.nickname
 ) 
