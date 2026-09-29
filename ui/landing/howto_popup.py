@@ -76,15 +76,15 @@ class HowToPopup(BaseWidget):
     def default_slides() -> list[HowToSlide]:
         return [
             HowToSlide(
-                image_path="assets/eggs/freshman.png",
+                image_path="eggs/freshman.png",
                 text="อ่านหนังสือให้ครบ 15 นาทีขึ้นไปเพื่อลุ้นไข่",
             ),
             HowToSlide(
-                image_path="assets/eggs/senior.png",
+                image_path="eggs/senior.png",
                 text="ยิ่งอ่านนาน โอกาสได้ไข่ระดับสูงยิ่งมากขึ้น",
             ),
             HowToSlide(
-                image_path="assets/eggs/professor.png",
+                image_path="eggs/professor.png",
                 text="ฟักไข่เพื่อลุ้นตัวละครหายาก แล้วเก็บสะสมใน CPE Dex",
             ),
         ]
