@@ -114,7 +114,7 @@ class SessionReport:
     session_id: int
     player_id: int
     subject: str
-    status: SessionStatus
+    status: SessionStatus 
     is_success: bool
     duration_sec: int
     started_at: datetime
