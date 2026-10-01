@@ -33,20 +33,8 @@ class SanctuaryScene(BaseWidget):
         self.stack = ft.Stack(
             width=self.width,
             height=self.height,
-            controls=[
-                ft.Image(
-                    src=self.BACKGROUND_PATH,
-                    width=self.width,
-                    height=self.height,
-                    fit="fill",
-                ),
-                *[
-                    sprite.build()
-                    for sprite in self.sprites
-                ],
-            ],
+            controls=self._layers(),
         )
-
         return self.stack
 
     def load(self, pets: list[PetDTO]) -> None:
@@ -54,37 +42,12 @@ class SanctuaryScene(BaseWidget):
 
         for pet in pets:
             size = PetSprite.BASE_SIZE * pet.scale
-
-            x = random.uniform(
-                0,
-                max(0, self.width - size),
-            )
-            y = random.uniform(
-                0,
-                max(0, self.height - size),
-            )
-
-            self.sprites.append(
-                PetSprite(
-                    pet=pet,
-                    x=x,
-                    y=y,
-                )
-            )
+            x = random.uniform(0, max(0, self.width - size))
+            y = random.uniform(0, max(0, self.height - size))
+            self.sprites.append(PetSprite(pet=pet, x=x, y=y))
 
         if self.stack is not None:
-            self.stack.controls = [
-                ft.Image(
-                    src=self.BACKGROUND_PATH,
-                    width=self.width,
-                    height=self.height,
-                    fit="fill",
-                ),
-                *[
-                    sprite.build()
-                    for sprite in self.sprites
-                ],
-            ]
+            self.stack.controls = self._layers()
             self.refresh()
 
     def start(self, page: ft.Page) -> None:
@@ -116,3 +79,12 @@ class SanctuaryScene(BaseWidget):
             )
 
         self.refresh()
+
+    def _layers(self) -> list[ft.Control]:
+        background = ft.Image(
+            src=self.BACKGROUND_PATH,
+            width=self.width,
+            height=self.height,
+            fit=ft.BoxFit.FILL,
+        )
+        return [background, *[sprite.build() for sprite in self.sprites]]

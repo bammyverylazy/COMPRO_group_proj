@@ -2,11 +2,19 @@ from __future__ import annotations
 
 import math
 import random
-from pathlib import PurePosixPath
+from functools import lru_cache
+from pathlib import Path, PurePosixPath
 
 import flet as ft
 
 from app.dto import PetDTO
+
+ASSETS_DIR: Path = Path(__file__).resolve().parents[2] / "assets"
+
+
+@lru_cache(maxsize=None)
+def asset_exists(path: str) -> bool:
+    return (ASSETS_DIR / path).is_file()
 
 
 class PetSprite:
@@ -55,9 +63,12 @@ class PetSprite:
     def _sprite_path(self, filename: str) -> str:
         return f"{self.sprite_directory}/{filename}"
 
-    def _current_sprite_path(self) -> str:
+    def _front_path(self) -> str:
+        return self._sprite_path(f"{self.sprite_name}_front.PNG")
+
+    def _wanted_sprite_path(self) -> str:
         if not self.moving:
-            return self._sprite_path(f"{self.sprite_name}_front.PNG")
+            return self._front_path()
 
         if abs(self.target_x - self.x) >= abs(self.target_y - self.y):
             if self.facing_left:
@@ -74,6 +85,12 @@ class PetSprite:
             f"{self.sprite_name}_move_forward.GIF"
         )
 
+    def _current_sprite_path(self) -> str:
+        path = self._wanted_sprite_path()
+        if asset_exists(path):
+            return path
+        return self._front_path()
+
     def build(self) -> ft.Control:
         sprite_path = self._current_sprite_path()
 
@@ -81,7 +98,8 @@ class PetSprite:
             src=sprite_path,
             width=self.size,
             height=self.size,
-            fit="contain",
+            fit=ft.BoxFit.CONTAIN,
+            gapless_playback=True,
         )
 
         self.container = ft.Container(
