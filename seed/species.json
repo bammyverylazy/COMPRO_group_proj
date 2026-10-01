@@ -1,0 +1,90 @@
+[
+  {
+    "code": "aomsin",
+    "name": "Aomsin",
+    "tier": "freshman",
+    "rarity": "common",
+    "sprite_path": "sprites/aomsin/aomsin_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "saimai",
+    "name": "Saimai",
+    "tier": "freshman",
+    "rarity": "common",
+    "sprite_path": "sprites/saimai/saimai_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "ploy",
+    "name": "Ploy",
+    "tier": "freshman",
+    "rarity": "rare",
+    "sprite_path": "sprites/ploy/ploy_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "proud",
+    "name": "Proud",
+    "tier": "freshman",
+    "rarity": "epic",
+    "sprite_path": "sprites/proud/proud_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "bam",
+    "name": "Bam",
+    "tier": "senior",
+    "rarity": "common",
+    "sprite_path": "sprites/bam/bam_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "ihere",
+    "name": "Ihere",
+    "tier": "senior",
+    "rarity": "rare",
+    "sprite_path": "sprites/ihere/ihere_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "janjao",
+    "name": "Janjao",
+    "tier": "senior",
+    "rarity": "epic",
+    "sprite_path": "sprites/janjao/janjao_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "thai",
+    "name": "Thai",
+    "tier": "senior",
+    "rarity": "legendary",
+    "sprite_path": "sprites/thai/thai_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "bundit",
+    "name": "Bundit",
+    "tier": "professor",
+    "rarity": "common",
+    "sprite_path": "sprites/bundit/bundit_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "tawan",
+    "name": "Tawan",
+    "tier": "professor",
+    "rarity": "rare",
+    "sprite_path": "sprites/tawan/tawan_front.PNG",
+    "description": ""
+  },
+  {
+    "code": "jittat",
+    "name": "Jittat",
+    "tier": "professor",
+    "rarity": "legendary",
+    "sprite_path": "sprites/jittat/jittat_front.PNG",
+    "description": ""
+  }
+]
