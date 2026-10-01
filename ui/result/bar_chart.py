@@ -43,7 +43,6 @@ class BarChart(BaseWidget):
                             height=height,
                             bgcolor=ft.Colors.BLUE_400,
                             border_radius=8,
-                            # alignment=ft.alignment.center,
                         ),
                         ft.Text(label, size=10),
                     ],
