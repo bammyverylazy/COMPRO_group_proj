@@ -12,6 +12,7 @@ from ui.result.result_card import ResultCard
 
 
 class ResultView(BaseView):
+    BACKGROUND_PATH: ClassVar[str] = "backgrounds/result_background.png"
     route: ClassVar[str] = "/result"
     TITLE: ClassVar[str] = "RESULT"
     TITLE_SIZE: ClassVar[int] = 28
@@ -32,7 +33,13 @@ class ResultView(BaseView):
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             expand=True,
         )
-        return ft.Container(content=self.body, padding=self.PADDING, expand=True)
+        return ft.Stack(
+            controls=[
+                ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, width=float("inf"), height=float("inf")),
+                ft.Container(content=self.body, padding=self.PADDING, left=0, right=0, top=0, bottom=0),
+            ],
+            expand=True,
+        )
 
     def on_enter(self) -> None:
         try:
@@ -59,7 +66,7 @@ class ResultView(BaseView):
         return []
 
     def _content(self) -> list[ft.Control]:
-        controls: list[ft.Control] = [ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD)]
+        controls: list[ft.Control] = [ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)]
         controls.extend(card.control for card in self.cards)
         controls.append(PixelButton("RETURN TO LOBBY", on_click=self.return_to_lobby).control)
         return controls

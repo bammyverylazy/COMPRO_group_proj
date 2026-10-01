@@ -189,18 +189,21 @@ class LobbyView(BaseView):
             "buttons/startfocus_hover.PNG",
             self.start_focus,
             self.BUTTON_HEIGHT,
+            "START",
         )
         dex_button = ImageButton(
             "buttons/eggdex_normal.PNG",
             "buttons/eggdex_hover.PNG",
             self.open_dex,
             self.BUTTON_HEIGHT,
+            "EGGDEX",
         )
         howto_button = ImageButton(
             "buttons/howto_normal.PNG",
             "buttons/howto_hover.PNG",
             self.open_howto,
             self.BUTTON_HEIGHT,
+            "HOW TO",
         )
         group_button = PixelButton("GROUP STUDY", self.start_group)
         history_button = PixelButton("HISTORY", self.open_history, variant="secondary")

@@ -5,12 +5,15 @@ from typing import Callable, ClassVar
 import flet as ft
 
 from ui.core.base_widget import BaseWidget
+from ui.core.theme import Theme
 
 
 class BarChart(BaseWidget):
     DEFAULT_BAR_HEIGHT: ClassVar[int] = 160
-    BAR_WIDTH: ClassVar[int] = 28
-    GAP: ClassVar[int] = 8
+    BAR_WIDTH: ClassVar[int] = 34
+    MIN_BAR: ClassVar[int] = 4
+    GAP: ClassVar[int] = 6
+    EMPTY_TEXT: ClassVar[str] = "No data"
 
     def __init__(
         self,
@@ -25,32 +28,10 @@ class BarChart(BaseWidget):
 
     def build(self) -> ft.Control:
         if not self.values:
-            return ft.Container(content=ft.Text("No data"), padding=8)
+            return ft.Container(content=ft.Text(self.EMPTY_TEXT, color=ft.Colors.WHITE), padding=8)
 
-        max_value = max(self.values.values())
-        if max_value <= 0:
-            max_value = 1
-
-        bars: list[ft.Control] = []
-        for label, value in self.values.items():
-            height = max(8, int((value / max_value) * self.bar_height))
-            bars.append(
-                ft.Column(
-                    [
-                        ft.Container(
-                            content=ft.Text(self.format_value(value), size=10, color=ft.Colors.WHITE),
-                            width=self.BAR_WIDTH,
-                            height=height,
-                            bgcolor=ft.Colors.BLUE_400,
-                            border_radius=8,
-                        ),
-                        ft.Text(label, size=10),
-                    ],
-                    spacing=4,
-                    alignment=ft.MainAxisAlignment.END,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                )
-            )
+        max_value = max(max(self.values.values()), 1)
+        bars: list[ft.Control] = [self._bar(label, value, max_value) for label, value in self.values.items()]
 
         return ft.Container(
             content=ft.Row(
@@ -58,6 +39,34 @@ class BarChart(BaseWidget):
                 spacing=self.GAP,
                 alignment=ft.MainAxisAlignment.SPACE_AROUND,
                 vertical_alignment=ft.CrossAxisAlignment.END,
+                scroll=ft.ScrollMode.AUTO,
             ),
             padding=8,
+        )
+
+    def _bar(self, label: str, value: int, max_value: int) -> ft.Control:
+        height = max(self.MIN_BAR, int(value / max_value * self.bar_height))
+        return ft.Column(
+            [
+                ft.Text(self.format_value(value) if value > 0 else "", size=9, color=ft.Colors.WHITE),
+                ft.Container(
+                    width=self.BAR_WIDTH,
+                    height=height,
+                    bgcolor=Theme.ACCENT if value > 0 else "white24",
+                    border_radius=6,
+                ),
+                ft.Text(
+                    label,
+                    size=10,
+                    color=ft.Colors.WHITE,
+                    width=self.BAR_WIDTH + self.GAP,
+                    max_lines=1,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    text_align=ft.TextAlign.CENTER,
+                ),
+            ],
+            spacing=4,
+            alignment=ft.MainAxisAlignment.END,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            tight=True,
         )

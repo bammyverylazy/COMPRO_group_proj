@@ -5,6 +5,7 @@ from typing import Callable
 import flet as ft
 
 from ui.core.base_widget import BaseWidget
+from ui.lobby.pet_sprite import asset_exists
 
 
 class ImageButton(BaseWidget):
@@ -14,15 +15,19 @@ class ImageButton(BaseWidget):
         hover_src: str,
         on_click: Callable[[], None],
         height: float = 48,
+        label: str = "",
     ) -> None:
         super().__init__()
-        self.normal_src: str = normal_src
-        self.hover_src: str = hover_src
+        self.normal_src: str = self._pick(normal_src, hover_src)
+        self.hover_src: str = self._pick(hover_src, normal_src)
         self.on_click: Callable[[], None] = on_click
         self.height: float = height
+        self.label: str = label
         self.image: ft.Image | None = None
 
     def build(self) -> ft.Control:
+        if not self.normal_src:
+            return ft.FilledButton(content=ft.Text(self.label or "BUTTON"), on_click=self._handle_click, height=self.height)
         self.image = ft.Image(
             src=self.normal_src,
             height=self.height,
@@ -34,6 +39,12 @@ class ImageButton(BaseWidget):
             on_click=self._handle_click,
             on_hover=self._handle_hover,
         )
+
+    def _pick(self, first: str, second: str) -> str:
+        for candidate in (first, second):
+            if asset_exists(candidate):
+                return candidate
+        return ""
 
     def _handle_click(self, event: ft.ControlEvent) -> None:
         self.on_click()

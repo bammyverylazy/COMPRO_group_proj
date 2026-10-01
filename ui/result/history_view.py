@@ -6,22 +6,31 @@ from typing import Any, ClassVar
 
 import flet as ft
 
+from app.domain.enums import EggTier
 from app.dto import History, SessionReport
 from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.format import Format
+from ui.core.theme import Theme
 from ui.core.widgets import PixelButton, StatTile
 from ui.result.bar_chart import BarChart
 
 
 class HistoryView(BaseView):
+    BACKGROUND_PATH: ClassVar[str] = "backgrounds/result_background.png"
     route: ClassVar[str] = "/history"
     TITLE: ClassVar[str] = "HISTORY"
     TITLE_SIZE: ClassVar[int] = 28
-    EMPTY_TEXT: ClassVar[str] = "No history yet"
-    CHART_HEIGHT: ClassVar[int] = 140
+    EMPTY_TEXT: ClassVar[str] = "ยังไม่มีประวัติการอ่าน ลองกด START ที่ Lobby ดูนะ"
+    PANEL_COLOR: ClassVar[str] = "black54"
+    CHART_HEIGHT: ClassVar[int] = 120
     SPACING: ClassVar[int] = 12
     PADDING: ClassVar[int] = 16
+    EGG_IMAGES: ClassVar[dict[EggTier, str]] = {
+        EggTier.FRESHMAN: "eggs/freshman_egg.png",
+        EggTier.SENIOR: "eggs/senior_egg.png",
+        EggTier.PROFESSOR: "eggs/professor_egg.png",
+    }
 
     def __init__(self, ctx: Any, **params: Any) -> None:
         super().__init__(ctx, **params)
@@ -35,9 +44,16 @@ class HistoryView(BaseView):
             controls=self._content(),
             spacing=self.SPACING,
             scroll=ft.ScrollMode.AUTO,
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
             expand=True,
         )
-        return ft.Container(content=self.body, padding=self.PADDING, expand=True)
+        return ft.Stack(
+            controls=[
+                ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, width=float("inf"), height=float("inf")),
+                ft.Container(content=self.body, padding=self.PADDING, left=0, right=0, top=0, bottom=0),
+            ],
+            expand=True,
+        )
 
     def on_enter(self) -> None:
         if self.ctx.player is None:
@@ -48,32 +64,36 @@ class HistoryView(BaseView):
             self.show_error(error)
             return
         stats = self.history.stats
-        self.daily_chart = BarChart(dict(stats.daily_study_sec), Format.duration, self.CHART_HEIGHT)
-        self.subject_chart = BarChart(
-            dict(stats.subject_study_sec),
-            lambda value: f"{value // 60}m",
-            self.CHART_HEIGHT,
-        )
+        daily = {self._short_date(day): seconds for day, seconds in stats.daily_study_sec.items()}
+        self.daily_chart = BarChart(daily, self._short_minutes, self.CHART_HEIGHT)
+        self.subject_chart = BarChart(dict(stats.subject_study_sec), self._short_minutes, self.CHART_HEIGHT)
         self._render()
 
     def render_row(self, report: SessionReport) -> ft.Control:
-        date_text = report.ended_at.date().isoformat() if report.ended_at is not None else date.today().isoformat()
-        result_text = "สำเร็จ" if report.is_success else "ยังไม่สำเร็จ"
+        moment = report.ended_at or report.started_at
+        date_text = moment.astimezone().strftime("%d/%m") if moment is not None else date.today().strftime("%d/%m")
+        result_text = "สำเร็จ" if report.is_success else "ไม่สำเร็จ"
+        result_color = Theme.ACCENT if report.is_success else "white70"
+        leading: ft.Control = ft.Container(width=28)
+        if report.tier is not None:
+            leading = ft.Image(src=self.EGG_IMAGES[report.tier], width=28, height=28, fit=ft.BoxFit.CONTAIN)
         row = ft.Row(
             controls=[
-                ft.Text(date_text, width=100),
-                ft.Text(report.subject, width=120),
-                ft.Text(Format.duration(report.duration_sec), width=90),
-                ft.Text(result_text, width=90),
+                leading,
+                ft.Text(date_text, width=44, color=ft.Colors.WHITE, size=13),
+                ft.Text(report.subject, expand=True, color=ft.Colors.WHITE, size=13, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
+                ft.Text(self._short_minutes(report.duration_sec), width=56, color=ft.Colors.WHITE, size=13),
+                ft.Text(result_text, width=64, color=result_color, size=13, weight=ft.FontWeight.BOLD),
             ],
-            spacing=12,
+            spacing=8,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
         return ft.Container(
             content=row,
-            border=ft.Border.all(1, ft.Colors.GREY_300),
-            padding=8,
-            border_radius=8,
-            on_click=partial(self._on_row_click, report.session_id),
+            bgcolor=self.PANEL_COLOR,
+            padding=ft.Padding.symmetric(horizontal=10, vertical=6),
+            border_radius=10,
+            #on_click=partial(self._on_row_click, report.session_id),
         )
 
     def open_report(self, session_id: int) -> None:
@@ -86,32 +106,68 @@ class HistoryView(BaseView):
         self.open_report(session_id)
 
     def _content(self) -> list[ft.Control]:
-        controls: list[ft.Control] = [
-            ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD),
-        ]
+        header = ft.Row(
+            controls=[
+                ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                PixelButton("BACK", on_click=self.close, variant="secondary").control,
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+        controls: list[ft.Control] = [header]
         if self.history is None or not self.history.reports:
-            controls.append(ft.Text(self.EMPTY_TEXT))
-        else:
-            controls.extend(self._stats_section(self.history))
-        controls.append(PixelButton("BACK", on_click=self.close, variant="secondary").control)
+            controls.append(self._panel([ft.Text(self.EMPTY_TEXT, color=ft.Colors.WHITE)]))
+            return controls
+        controls.extend(self._stats_section(self.history))
         return controls
 
     def _stats_section(self, history: History) -> list[ft.Control]:
         stats = history.stats
         stat_tiles = [
             StatTile("รอบทั้งหมด", str(stats.total_sessions)).control,
-            StatTile("อัตราสำเร็จ", f"{stats.success_rate:.1%}").control,
+            StatTile("อัตราสำเร็จ", f"{stats.success_rate:.0%}").control,
             StatTile("เวลารวม", Format.duration(stats.total_study_sec)).control,
         ]
-        controls: list[ft.Control] = [ft.Row(stat_tiles, wrap=True)]
+        egg_row = ft.Row(
+            controls=[
+                ft.Row(
+                    controls=[
+                        ft.Image(src=self.EGG_IMAGES[tier], width=32, height=32, fit=ft.BoxFit.CONTAIN),
+                        ft.Text(f"× {stats.tier_counts.get(tier, 0)}", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+                    ],
+                    spacing=4,
+                )
+                for tier in self.EGG_IMAGES
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_AROUND,
+        )
+        controls: list[ft.Control] = [
+            ft.Row(stat_tiles, wrap=True, alignment=ft.MainAxisAlignment.CENTER),
+            self._panel([self._section_title("ไข่ที่ได้"), egg_row]),
+        ]
         if self.daily_chart is not None:
-            controls.append(ft.Text("7 วัน"))
-            controls.append(self.daily_chart.control)
+            controls.append(self._panel([self._section_title("7 วันล่าสุด"), self.daily_chart.control]))
         if self.subject_chart is not None:
-            controls.append(ft.Text("แยกวิชา"))
-            controls.append(self.subject_chart.control)
+            controls.append(self._panel([self._section_title("แยกตามวิชา"), self.subject_chart.control]))
+        controls.append(self._section_title("ทุกรอบ (กดเพื่อดูผล)"))
         controls.extend(self.render_row(report) for report in history.reports)
         return controls
+
+    def _panel(self, controls: list[ft.Control]) -> ft.Control:
+        return ft.Container(
+            content=ft.Column(controls, spacing=8, tight=True),
+            bgcolor=self.PANEL_COLOR,
+            border_radius=16,
+            padding=12,
+        )
+
+    def _section_title(self, text: str) -> ft.Control:
+        return ft.Text(text, size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
+
+    def _short_date(self, iso_day: str) -> str:
+        return date.fromisoformat(iso_day).strftime("%d/%m")
+
+    def _short_minutes(self, seconds: int) -> str:
+        return f"{seconds // 60}m"
 
     def _render(self) -> None:
         if self.body is None:

@@ -9,20 +9,24 @@ from app.domain.enums import EggTier
 from app.dto import SessionReport
 from ui.core.base_widget import BaseWidget
 from ui.core.format import Format
+from ui.core.theme import Theme
 
 
 class ResultCard(BaseWidget):
-    TIER_NAMES: ClassVar[dict[EggTier, str]] = {
-        EggTier.FRESHMAN: "ไข่รุ่นเรา",
-        EggTier.SENIOR: "ไข่รุ่นพี่",
-        EggTier.PROFESSOR: "ไข่อาจารย์",
+    EGG_IMAGES: ClassVar[dict[EggTier, str]] = {
+        EggTier.FRESHMAN: "eggs/freshman_egg.png",
+        EggTier.SENIOR: "eggs/senior_egg.png",
+        EggTier.PROFESSOR: "eggs/professor_egg.png",
     }
+    FAILED_EGG: ClassVar[str] = "eggs/freshman_egg.png"
     SECONDS_PER_MINUTE: ClassVar[int] = 60
     SPRITE_SIZE: ClassVar[int] = 96
-    TITLE_SIZE: ClassVar[int] = 20
+    EGG_SIZE: ClassVar[int] = 44
+    TITLE_SIZE: ClassVar[int] = 18
     CARD_PADDING: ClassVar[int] = 16
     CARD_RADIUS: ClassVar[int] = 12
-    CARD_COLOR: ClassVar[str] = ft.Colors.BLUE_GREY_900
+    CARD_COLOR: ClassVar[str] = "black54"
+    CARD_WIDTH: ClassVar[int] = 360
 
     def __init__(self, report: SessionReport, nickname: str) -> None:
         super().__init__()
@@ -33,14 +37,16 @@ class ResultCard(BaseWidget):
         body = self._build_success() if self.report.is_success else self._build_failed()
         controls: list[ft.Control] = [body]
         if self.report.room_id is not None:
-            controls.insert(0, ft.Text(self.nickname, size=self.TITLE_SIZE))
+            controls.insert(0, ft.Text(self.nickname, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE))
 
         return ft.Container(
             content=ft.Column(
                 controls,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=8,
+                spacing=6,
+                tight=True,
             ),
+            width=self.CARD_WIDTH,
             padding=self.CARD_PADDING,
             border_radius=self.CARD_RADIUS,
             bgcolor=self.CARD_COLOR,
@@ -48,41 +54,51 @@ class ResultCard(BaseWidget):
 
     def _build_success(self) -> ft.Control:
         pet = self.report.pet
-        if pet is None:
-            pet_name = "สัตว์เลี้ยง"
-            sprite_path = ""
-            level = 0
-            scale = 1.0
-        else:
-            pet_name = pet.species.name
-            sprite_path = pet.species.sprite_path
-            level = pet.level
-            scale = pet.scale
-
-        sprite_size = int(self.SPRITE_SIZE * scale)
-        badge = "ตัวใหม่!" if bool(self.report.is_new) else f"LEVEL UP! Lv.{level}"
-        tier_name = self.TIER_NAMES.get(self.report.tier, "ไข่") if self.report.tier is not None else "ไข่"
-
-        return ft.Column(
-            [
-                ft.Text(self.report.subject),
-                ft.Text(tier_name),
-                ft.Image(src=sprite_path, width=sprite_size, height=sprite_size),
-                ft.Text(pet_name),
-                ft.Text(badge, weight=ft.FontWeight.BOLD),
-                ft.Text(Format.duration(self.report.duration_sec)),
-            ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        )
+        tier = self.report.tier
+        controls: list[ft.Control] = [ft.Text(self.report.subject, color="white70")]
+        if tier is not None:
+            controls.append(
+                ft.Row(
+                    controls=[
+                        ft.Image(src=self.EGG_IMAGES[tier], width=self.EGG_SIZE, height=self.EGG_SIZE, fit=ft.BoxFit.CONTAIN),
+                        ft.Text(Format.tier_name(tier), color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                )
+            )
+        if pet is not None:
+            badge = "ตัวใหม่!" if self.report.is_new else f"LEVEL UP! Lv.{pet.level}"
+            sprite_size = int(self.SPRITE_SIZE * pet.scale)
+            controls.extend(
+                [
+                    ft.Image(src=pet.species.sprite_path, width=sprite_size, height=sprite_size, fit=ft.BoxFit.CONTAIN),
+                    ft.Text(pet.species.name, size=18, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD),
+                    ft.Text(pet.species.rarity.value.upper(), color=Theme.rarity_color(pet.species.rarity), weight=ft.FontWeight.BOLD),
+                    ft.Text(badge, color=Theme.ACCENT, weight=ft.FontWeight.BOLD),
+                ]
+            )
+        controls.append(ft.Text(f"อ่านไป {Format.duration(self.report.duration_sec)}", color=ft.Colors.WHITE))
+        return ft.Column(controls, horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=4, tight=True)
 
     def _build_failed(self) -> ft.Control:
         remaining_minutes = math.ceil(self.report.remaining_sec / self.SECONDS_PER_MINUTE)
         return ft.Column(
             [
-                ft.Text(self.report.subject),
-                ft.Text("ยังไม่ได้ไข่", weight=ft.FontWeight.BOLD),
-                ft.Text(f"อ่านไป {Format.duration(self.report.duration_sec)}"),
-                ft.Text(f"ต้องอ่านอีก {remaining_minutes} นาที"),
+                ft.Text(self.report.subject, color="white70"),
+                ft.Image(
+                    src=self.FAILED_EGG,
+                    width=self.EGG_SIZE,
+                    height=self.EGG_SIZE,
+                    fit=ft.BoxFit.CONTAIN,
+                    color=ft.Colors.BLACK,
+                    color_blend_mode=ft.BlendMode.SRC_IN,
+                    opacity=0.5,
+                ),
+                ft.Text("ยังไม่ได้ไข่", size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                ft.Text(f"อ่านไป {Format.duration(self.report.duration_sec)}", color=ft.Colors.WHITE),
+                ft.Text(f"ต้องอ่านอีก {remaining_minutes} นาที", color=Theme.ACCENT, weight=ft.FontWeight.BOLD),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=4,
+            tight=True,
         )

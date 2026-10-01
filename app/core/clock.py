@@ -14,6 +14,6 @@ class Clock:
         if until is None:
             until = self.now()
 
-        elapsed = (until - started_at).total_seconds() * self.speed
+        elapsed = (until - started_at).total_seconds() * self.speed +1000
         return int(elapsed)
 
