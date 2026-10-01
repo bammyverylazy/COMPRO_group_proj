@@ -45,9 +45,9 @@ class HowToPopup(BaseWidget):
                     self._text,
                     ft.Row(
                         [
-                            ft.TextButton("ก่อนหน้า", on_click=lambda _: self.prev()),
+                            ft.TextButton("Previous", on_click=lambda _: self.prev()),
                             self._counter,
-                            ft.TextButton("ถัดไป", on_click=lambda _: self.next()),
+                            ft.TextButton("Next", on_click=lambda _: self.next()),
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
@@ -77,15 +77,15 @@ class HowToPopup(BaseWidget):
         return [
             HowToSlide(
                 image_path="eggs/freshman.png",
-                text="อ่านหนังสือให้ครบ 15 นาทีขึ้นไปเพื่อลุ้นไข่",
+                text="Study for at least 15 minutes to earn an egg.",
             ),
             HowToSlide(
                 image_path="eggs/senior.png",
-                text="ยิ่งอ่านนาน โอกาสได้ไข่ระดับสูงยิ่งมากขึ้น",
+                text="The longer you study, the higher the chance to get higher tier eggs.",
             ),
             HowToSlide(
                 image_path="eggs/professor.png",
-                text="ฟักไข่เพื่อลุ้นตัวละครหายาก แล้วเก็บสะสมใน CPE Dex",
+                text="Hatch eggs to collect rare characters in your CPE Dex.",
             ),
         ]
 

@@ -22,7 +22,7 @@ class PlayerPicker(BaseWidget):
         self.error_text: ft.Text | None = None
 
     def build(self) -> ft.Control:
-        self.nickname_field = ft.TextField(label="ชื่อเล่นใหม่", max_length=MAX_NICKNAME_LENGTH)
+        self.nickname_field = ft.TextField(label="New Nickname", max_length=MAX_NICKNAME_LENGTH)
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         player_rows: list[ft.Control] = [
             ft.ListTile(
@@ -33,7 +33,7 @@ class PlayerPicker(BaseWidget):
         ]
         return ft.Column(
             [
-                ft.Text("เลือกผู้เล่น", size=18, weight=ft.FontWeight.BOLD, color=Theme.TEXT),
+                ft.Text("Select Player", size=18, weight=ft.FontWeight.BOLD, color=Theme.TEXT),
                 ft.Column(player_rows, scroll=ft.ScrollMode.AUTO, height=200),
                 ft.Divider(),
                 self.nickname_field,
