@@ -31,13 +31,15 @@ class ResultCard(BaseWidget):
 
     def build(self) -> ft.Control:
         body = self._build_success() if self.report.is_success else self._build_failed()
-        controls = [body]
+        controls: list[ft.Control] = [body]
         if self.report.room_id is not None:
             controls.insert(0, ft.Text(self.nickname, size=self.TITLE_SIZE))
+
         return ft.Container(
             content=ft.Column(
                 controls,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=8,
             ),
             padding=self.CARD_PADDING,
             border_radius=self.CARD_RADIUS,
@@ -46,14 +48,27 @@ class ResultCard(BaseWidget):
 
     def _build_success(self) -> ft.Control:
         pet = self.report.pet
-        sprite_size = int(self.SPRITE_SIZE * pet.scale)
-        badge = "ตัวใหม่!" if self.report.is_new else f"LEVEL UP! Lv.{pet.level}"
+        if pet is None:
+            pet_name = "สัตว์เลี้ยง"
+            sprite_path = ""
+            level = 0
+            scale = 1.0
+        else:
+            pet_name = pet.species.name
+            sprite_path = pet.species.sprite_path
+            level = pet.level
+            scale = pet.scale
+
+        sprite_size = int(self.SPRITE_SIZE * scale)
+        badge = "ตัวใหม่!" if bool(self.report.is_new) else f"LEVEL UP! Lv.{level}"
+        tier_name = self.TIER_NAMES.get(self.report.tier, "ไข่") if self.report.tier is not None else "ไข่"
+
         return ft.Column(
             [
                 ft.Text(self.report.subject),
-                ft.Text(self.TIER_NAMES[self.report.tier]),
-                ft.Image(src=pet.species.sprite_path, width=sprite_size, height=sprite_size),
-                ft.Text(pet.species.name),
+                ft.Text(tier_name),
+                ft.Image(src=sprite_path, width=sprite_size, height=sprite_size),
+                ft.Text(pet_name),
                 ft.Text(badge, weight=ft.FontWeight.BOLD),
                 ft.Text(Format.duration(self.report.duration_sec)),
             ],

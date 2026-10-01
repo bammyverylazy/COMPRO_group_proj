@@ -1,51 +1,58 @@
-import math
-from unittest.mock import MagicMock
+from __future__ import annotations
+
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 import flet as ft
 import pytest
 
-from app.domain.enums import EggTier
-from app.dto import SessionReport
-from ui.result.result_card import ResultCard 
-from datetime import datetime, timezone
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.domain.enums import EggTier, Rarity, SessionStatus
+from app.dto import PetDTO, SessionReport, SpeciesDTO
+from ui.result.result_card import ResultCard
 
 
 @pytest.fixture
-def mock_pet():
-    pet = MagicMock()
-    pet.scale = 1.5
-    pet.level = 2
-    pet.species.sprite_path = "assets/pets/cat.png"
-    pet.species.name = "น้องแมว"
-    return pet
+def pet() -> PetDTO:
+    return PetDTO(
+        species=SpeciesDTO(
+            code="cat",
+            name="น้องแมว",
+            tier=EggTier.FRESHMAN,
+            rarity=Rarity.COMMON,
+            sprite_path="assets/pets/cat.png",
+            description="",
+        ),
+        level=2,
+        scale=1.5,
+    )
 
 
 @pytest.fixture
-def base_report(mock_pet):
+def base_report(pet: PetDTO) -> SessionReport:
     return SessionReport(
         session_id=1,
         player_id=1,
-        is_success=True,
-        is_new=False,
-        status="HATCHED",
         subject="Mathematics",
-        tier=EggTier.FRESHMAN,
+        status=SessionStatus.HATCHED,
+        is_success=True,
         duration_sec=1800,
+        started_at=datetime.now(timezone.utc),
+        ended_at=datetime.now(timezone.utc),
         remaining_sec=0,
+        tier=EggTier.FRESHMAN,
+        pet=pet,
+        is_new=False,
         room_id=None,
-        pet=mock_pet,
-        started_at= datetime.now(timezone.utc),
-        ended_at= datetime.now(timezone.utc) 
     )
 
 
 class TestResultCard:
-    # -------------------------------------------------------------------------
-    # 1. Test Case: Success States
-    # -------------------------------------------------------------------------
-
-    def test_build_success_existing_pet(self, base_report):
-        """กรณีอ่านสำเร็จและเลเวลอัพ (สัตว์เลี้ยงตัวเดิม)"""
+    def test_build_success_existing_pet(self, base_report: SessionReport) -> None:
         card = ResultCard(report=base_report, nickname="Student1")
         container = card.build()
 
@@ -54,41 +61,32 @@ class TestResultCard:
 
         column = container.content
         assert isinstance(column, ft.Column)
-        assert len(column.controls) == 1  # ไม่มี room_id -> มีแค่ body
+        assert len(column.controls) == 1
 
         success_column = column.controls[0]
         assert isinstance(success_column, ft.Column)
 
-        # ตรวจสอบ Badge แสดงข้อความ LEVEL UP
         badge_text = success_column.controls[4]
         assert badge_text.value == f"LEVEL UP! Lv.{base_report.pet.level}"
 
-        # ตรวจสอบขนาดของ Sprite Image (SPRITE_SIZE * scale)
         image = success_column.controls[2]
         expected_size = int(ResultCard.SPRITE_SIZE * base_report.pet.scale)
         assert image.width == expected_size
         assert image.height == expected_size
 
-    def test_build_success_new_pet(self, base_report):
-        """กรณีอ่านสำเร็จและได้สัตว์เลี้ยงตัวใหม่ (is_new = True)"""
+    def test_build_success_new_pet(self, base_report: SessionReport) -> None:
         base_report.is_new = True
         card = ResultCard(report=base_report, nickname="Student1")
         container = card.build()
 
         success_column = container.content.controls[0]
         badge_text = success_column.controls[4]
-
         assert badge_text.value == "ตัวใหม่!"
 
-    # -------------------------------------------------------------------------
-    # 2. Test Case: Failure State
-    # -------------------------------------------------------------------------
-
-    def test_build_failed(self, base_report):
-        """กรณีอ่านไม่สำเร็จ (ยังไม่ได้ไข่)"""
+    def test_build_failed(self, base_report: SessionReport) -> None:
         base_report.is_success = False
         base_report.duration_sec = 600
-        base_report.remaining_sec = 150  # 150 วิ = 2.5 นาที -> ceil ควรได้ 3 นาที
+        base_report.remaining_sec = 150
 
         card = ResultCard(report=base_report, nickname="Student1")
         container = card.build()
@@ -96,43 +94,32 @@ class TestResultCard:
         failed_column = container.content.controls[0]
         assert isinstance(failed_column, ft.Column)
 
-        # ตรวจสอบข้อความเตือนการอ่านไม่ครบ
         status_text = failed_column.controls[1].value
         remaining_text = failed_column.controls[3].value
 
         assert status_text == "ยังไม่ได้ไข่"
         assert remaining_text == "ต้องอ่านอีก 3 นาที"
 
-    # -------------------------------------------------------------------------
-    # 3. Test Case: Room ID & Header Controls
-    # -------------------------------------------------------------------------
-
-    def test_build_with_room_id(self, base_report):
-        """กรณีมี room_id ต้องมี Text แสดง Nickname ที่ตำแหน่งแรก"""
-        base_report.room_id = "ROOM_123"
+    def test_build_with_room_id(self, base_report: SessionReport) -> None:
+        base_report.room_id = 123
         card = ResultCard(report=base_report, nickname="AwesomeUser")
         container = card.build()
 
         column = container.content
-        assert len(column.controls) == 2  # มี Header (Nickname) + Body
+        assert len(column.controls) == 2
 
         header_text = column.controls[0]
         assert isinstance(header_text, ft.Text)
         assert header_text.value == "AwesomeUser"
         assert header_text.size == ResultCard.TITLE_SIZE
 
-    def test_build_without_room_id(self, base_report):
-        """กรณีไม่มี room_id จะต้องไม่มี Text แสดง Nickname"""
+    def test_build_without_room_id(self, base_report: SessionReport) -> None:
         base_report.room_id = None
         card = ResultCard(report=base_report, nickname="AwesomeUser")
         container = card.build()
 
         column = container.content
         assert len(column.controls) == 1
-
-    # -------------------------------------------------------------------------
-    # 4. Test Case: Tier Names Mapping
-    # -------------------------------------------------------------------------
 
     @pytest.mark.parametrize(
         ("tier", "expected_name"),
@@ -142,8 +129,7 @@ class TestResultCard:
             (EggTier.PROFESSOR, "ไข่อาจารย์"),
         ],
     )
-    def test_tier_names_mapping(self, base_report, tier, expected_name):
-        """ทดสอบการแปลง Enum EggTier เป็นชื่อภาษาไทย"""
+    def test_tier_names_mapping(self, base_report: SessionReport, tier: EggTier, expected_name: str) -> None:
         base_report.tier = tier
         card = ResultCard(report=base_report, nickname="User")
         container = card.build()
