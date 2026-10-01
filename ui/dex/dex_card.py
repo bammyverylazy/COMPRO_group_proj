@@ -10,9 +10,9 @@ from ui.core.theme import Theme
 
 
 class DexCard(BaseWidget):
-    WIDTH: ClassVar[int] = 96
-    HEIGHT: ClassVar[int] = 124
-    IMAGE_SIZE: ClassVar[int] = 72
+    WIDTH: ClassVar[int] = 112
+    HEIGHT: ClassVar[int] = 144
+    IMAGE_SIZE: ClassVar[int] = 88
     LOCKED_NAME: ClassVar[str] = "???"
     LOCKED_BORDER: ClassVar[str] = "#55FFFFFF"
     CARD_COLOR: ClassVar[str] = Theme.PANEL_COLOR

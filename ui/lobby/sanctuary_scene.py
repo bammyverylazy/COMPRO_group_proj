@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import random
 
 import flet as ft
 
@@ -41,10 +40,11 @@ class SanctuaryScene(BaseWidget):
         self.sprites = []
 
         for pet in pets:
-            size = PetSprite.BASE_SIZE * pet.scale
-            x = random.uniform(0, max(0, self.width - size))
-            y = random.uniform(0, max(0, self.height - size))
-            self.sprites.append(PetSprite(pet=pet, x=x, y=y))
+            sprite = PetSprite(pet=pet, x=0, y=0)
+            sprite.choose_target(self.width, self.height)
+            sprite.x = sprite.target_x
+            sprite.y = sprite.target_y
+            self.sprites.append(sprite)
 
         if self.stack is not None:
             self.stack.controls = self._layers()

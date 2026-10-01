@@ -18,11 +18,14 @@ def asset_exists(path: str) -> bool:
 
 
 class PetSprite:
-    BASE_SIZE: int = 64
+    BASE_SIZE: int = 96
     DEFAULT_SPEED: float = 40.0
     MIN_REST_SEC: float = 1.0
     MAX_REST_SEC: float = 3.0
     ARRIVAL_DISTANCE: float = 1.0
+    FLOOR_TOP_RATIO: float = 0.58
+    FLOOR_BOTTOM_RATIO: float = 0.96
+    WALL_MARGIN: float = 24.0
 
     def __init__(
         self,
@@ -110,20 +113,22 @@ class PetSprite:
 
         return self.container
 
+    def _floor_bounds(self, width: float, height: float) -> tuple[float, float, float, float]:
+        min_x = min(self.WALL_MARGIN, max(0, width - self.size))
+        max_x = max(min_x, width - self.size - self.WALL_MARGIN)
+        min_y = min(height * self.FLOOR_TOP_RATIO, max(0, height - self.size))
+        max_y = max(min_y, height * self.FLOOR_BOTTOM_RATIO - self.size)
+        return min_x, max_x, min_y, max_y
+
     def choose_target(
         self,
         width: float,
         height: float,
     ) -> None:
-        self.target_x = random.uniform(
-            0,
-            max(0, width - self.size),
-        )
+        min_x, max_x, min_y, max_y = self._floor_bounds(width, height)
 
-        self.target_y = random.uniform(
-            0,
-            max(0, height - self.size),
-        )
+        self.target_x = random.uniform(min_x, max_x)
+        self.target_y = random.uniform(min_y, max_y)
 
     def update(
         self,

@@ -32,14 +32,20 @@ class Theme:
         Rarity.LEGENDARY: "#F2913A",
     }
 
+    WINDOW_WIDTH: int = 450
+    WINDOW_HEIGHT: int = 800
+
     @classmethod
     def apply(cls, page: ft.Page) -> None:
-        page.title = "CPE Egg Hatch"
+        page.title = "CPEgg Hatch"
         page.fonts = {cls.FONT_FAMILY: cls.FONT_FAMILY}
         page.theme = ft.Theme(font_family=cls.FONT_FAMILY, color_scheme_seed=cls.PRIMARY)
         page.bgcolor = cls.BACKGROUND
-        page.window.width = 420
-        page.window.height = 800
+        page.window.width = cls.WINDOW_WIDTH
+        page.window.height = cls.WINDOW_HEIGHT
+        page.window.resizable = False
+        page.padding = 0
+        page.spacing = 0
 
     @classmethod
     def is_mobile(cls, page: ft.Page) -> bool:

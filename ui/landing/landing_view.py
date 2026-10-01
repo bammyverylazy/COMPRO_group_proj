@@ -17,11 +17,13 @@ if TYPE_CHECKING:
 class LandingView(BaseView):
     route: ClassVar[str] = "/"
     requires_player: ClassVar[bool] = False
+    HOWTO_OVERLAY_COLOR: ClassVar[str] = "#80FFFFFF"
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)
         self.picker: PlayerPicker | None = None
         self.howto: HowToPopup | None = None
+        self._howto_overlay: ft.Control | None = None
         self._howto_img = ft.Image(
             src="buttons/howto_normal.PNG",
             height=50,
@@ -105,15 +107,23 @@ class LandingView(BaseView):
     def open_howto(self) -> None:
         def close_howto() -> None:
             if (
-                self.howto is not None
-                and self.howto.control in self.ctx.page.overlay
+                self._howto_overlay is not None
+                and self._howto_overlay in self.ctx.page.overlay
             ):
-                self.ctx.page.overlay.remove(self.howto.control)
+                self.ctx.page.overlay.remove(self._howto_overlay)
                 self.ctx.page.update()
-                self.howto = None
+            self.howto = None
+            self._howto_overlay = None
 
         self.howto = HowToPopup(
             slides=HowToPopup.default_slides(), on_close=close_howto
         )
-        self.ctx.page.overlay.append(self.howto.control)
+        self._howto_overlay = ft.Container(
+            content=self.howto.control,
+            bgcolor=self.HOWTO_OVERLAY_COLOR,
+            alignment=ft.Alignment.CENTER,
+            padding=Theme.PAGE_PADDING,
+            expand=True,
+        )
+        self.ctx.page.overlay.append(self._howto_overlay)
         self.ctx.page.update()

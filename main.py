@@ -4,15 +4,11 @@ import flet as ft
 
 from app.config import Settings
 from ui.core.app_context import AppContext
+from ui.core.theme import Theme
 
 
 def main(page: ft.Page) -> None:
-    page.title = "CPEgg Hatch"
-    page.window.width = 450
-    page.window.height = 800
-    page.window.resizable = False
-    page.padding = 0
-    page.spacing = 0
+    Theme.apply(page)
     ctx = AppContext.create(page, Settings())
     ctx.nav.start()
 

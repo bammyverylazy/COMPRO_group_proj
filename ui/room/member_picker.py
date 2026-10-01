@@ -40,6 +40,11 @@ class MemberPicker(BaseWidget):
             max_length=self.MAX_NICKNAME,
             on_submit=self._handle_submit,
             expand=True,
+            color=ft.Colors.WHITE,
+            label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+            cursor_color=ft.Colors.WHITE,
+            border_color=ft.Colors.WHITE70,
+            focused_border_color=Theme.ACCENT,
         )
         self._error_text = ft.Text("", color=Theme.ERROR, visible=False)
         add_button = PixelButton("ADD", self.add_player, variant="secondary")

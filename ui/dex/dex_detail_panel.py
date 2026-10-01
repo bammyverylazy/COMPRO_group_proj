@@ -11,7 +11,7 @@ from ui.core.theme import Theme
 
 
 class DexDetailPanel(BaseWidget):
-    IMAGE_SIZE: ClassVar[int] = 140
+    IMAGE_SIZE: ClassVar[int] = 170
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     EMPTY_TEXT: ClassVar[str] = "Tap a creature to see its details"
     LOCKED_NAME: ClassVar[str] = "???"
@@ -111,5 +111,5 @@ class DexDetailPanel(BaseWidget):
                 ft.Text(label, size=13, color="white70"),
                 ft.Text(value, size=13, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, expand=True, text_align=ft.TextAlign.RIGHT),
             ],
-            width=300,
+            width=Theme.CONTENT_WIDTH - 2 * Theme.PAGE_PADDING,
         )

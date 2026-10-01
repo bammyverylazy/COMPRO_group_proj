@@ -37,7 +37,15 @@ class RoomSetupView(BaseView):
         player = self.ctx.player
         if player is not None:
             self.picker.selected_ids.add(player.id)
-        self.subject_field = ft.TextField(label="Subject", on_submit=self._handle_submit)
+        self.subject_field = ft.TextField(
+            label="Subject",
+            on_submit=self._handle_submit,
+            color=ft.Colors.WHITE,
+            label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+            cursor_color=ft.Colors.WHITE,
+            border_color=ft.Colors.WHITE70,
+            focused_border_color=Theme.ACCENT,
+        )
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         back_button = PixelButton("BACK", self.back, variant="secondary")
         start_button = PixelButton("START", self.start)
