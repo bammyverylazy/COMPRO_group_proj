@@ -6,7 +6,8 @@ import pytest
 
 from app.domain.enums import EggTier
 from app.dto import SessionReport
-from ui.cards.result_card import ResultCard  # ปรับ path ตามโครงสร้างโปรเจกต์ของคุณ
+from ui.result.result_card import ResultCard 
+from datetime import datetime, timezone
 
 
 @pytest.fixture
@@ -22,14 +23,19 @@ def mock_pet():
 @pytest.fixture
 def base_report(mock_pet):
     return SessionReport(
+        session_id=1,
+        player_id=1,
         is_success=True,
         is_new=False,
+        status="HATCHED",
         subject="Mathematics",
         tier=EggTier.FRESHMAN,
         duration_sec=1800,
         remaining_sec=0,
         room_id=None,
         pet=mock_pet,
+        started_at= datetime.now(timezone.utc),
+        ended_at= datetime.now(timezone.utc) 
     )
 
 
