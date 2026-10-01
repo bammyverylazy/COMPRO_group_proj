@@ -7,7 +7,7 @@ from ui.core.app_context import AppContext
 
 
 def main(page: ft.Page) -> None:
-    page.title = "CPE Egg Hatch"
+    page.title = "CPEgg Hatch"
     page.window.width = 450
     page.window.height = 800
     page.window.resizable = False
