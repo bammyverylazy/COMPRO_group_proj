@@ -41,9 +41,9 @@ class MemberPicker(BaseWidget):
             on_submit=self._handle_submit,
             expand=True,
             color=ft.Colors.WHITE,
-            label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+            label_style=ft.TextStyle(color=ft.Colors.WHITE_70),
             cursor_color=ft.Colors.WHITE,
-            border_color=ft.Colors.WHITE70,
+            border_color=ft.Colors.WHITE_70,
             focused_border_color=Theme.ACCENT,
         )
         self._error_text = ft.Text("", color=Theme.ERROR, visible=False)
