@@ -11,6 +11,19 @@ class Theme:
     ERROR: str = "#D2412F"
     FONT_FAMILY: str = "Mali"
     MOBILE_BREAKPOINT: int = 600
+    PAGE_PADDING: int = 16
+    PANEL_PADDING: int = 16
+    PANEL_RADIUS: int = 16
+    PANEL_COLOR: str = "black54"
+    SPACING: int = 12
+    TITLE_SIZE: int = 26
+    HEADING_SIZE: int = 18
+    BODY_SIZE: int = 14
+    SMALL_SIZE: int = 12
+    CLOCK_SIZE: int = 64
+    BUTTON_HEIGHT: int = 44
+    IMAGE_BUTTON_HEIGHT: int = 52
+    CONTENT_WIDTH: int = 400
 
     _RARITY_COLORS: dict[Rarity, str] = {
         Rarity.COMMON: "#8A93A6",

@@ -22,7 +22,7 @@ class DexView(BaseView):
     route: ClassVar[str] = "/dex"
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/dex_background.png"
     TITLE: ClassVar[str] = "CPE DEX"
-    PANEL_COLOR: ClassVar[str] = "black54"
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     TIER_ORDER: ClassVar[tuple[EggTier, ...]] = (
         EggTier.FRESHMAN,
         EggTier.SENIOR,
@@ -40,9 +40,9 @@ class DexView(BaseView):
 
     def build(self) -> ft.Control:
         self.detail = DexDetailPanel()
-        self.completion_text = ft.Text("", color=ft.Colors.WHITE, size=14)
+        self.completion_text = ft.Text("", color=ft.Colors.WHITE, size=Theme.BODY_SIZE)
         self.progress = ft.ProgressBar(value=0.0, color=Theme.ACCENT, bgcolor="white24", bar_height=8)
-        self.sections = ft.Column(controls=[], spacing=12, tight=True)
+        self.sections = ft.Column(controls=[], spacing=Theme.SPACING, tight=True)
         back_button = PixelButton("BACK", self.close, variant="secondary")
 
         header = ft.Container(
@@ -50,7 +50,7 @@ class DexView(BaseView):
                 controls=[
                     ft.Row(
                         controls=[
-                            ft.Text(self.TITLE, size=26, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                            ft.Text(self.TITLE, size=Theme.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                             back_button.control,
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -62,13 +62,13 @@ class DexView(BaseView):
                 tight=True,
             ),
             bgcolor=self.PANEL_COLOR,
-            border_radius=16,
-            padding=16,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PAGE_PADDING,
         )
 
         body = ft.Column(
             controls=[header, self.detail.control, self.sections],
-            spacing=12,
+            spacing=Theme.SPACING,
             scroll=ft.ScrollMode.AUTO,
             horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
             expand=True,
@@ -82,7 +82,7 @@ class DexView(BaseView):
                     width=float("inf"),
                     height=float("inf"),
                 ),
-                ft.Container(content=body, padding=16, left=0, right=0, top=0, bottom=0),
+                ft.Container(content=body, padding=Theme.PAGE_PADDING, left=0, right=0, top=0, bottom=0),
             ],
             expand=True,
         )
@@ -97,7 +97,7 @@ class DexView(BaseView):
             return
         unlocked = sum(1 for entry in self.entries if entry.unlocked)
         if self.completion_text is not None:
-            self.completion_text.value = f"สะสมแล้ว {unlocked} / {len(self.entries)} ตัว ({Format.percent(completion)})"
+            self.completion_text.value = f"Collected {unlocked} / {len(self.entries)} ({Format.percent(completion)})"
             self.completion_text.update()
         if self.progress is not None:
             self.progress.value = completion
@@ -136,7 +136,7 @@ class DexView(BaseView):
                         controls=[
                             ft.Text(
                                 f"{Format.tier_name(tier)} · {unlocked}/{len(tier_entries)}",
-                                size=16,
+                                size=Theme.HEADING_SIZE,
                                 weight=ft.FontWeight.BOLD,
                                 color=ft.Colors.WHITE,
                             ),
@@ -146,8 +146,8 @@ class DexView(BaseView):
                         tight=True,
                     ),
                     bgcolor=self.PANEL_COLOR,
-                    border_radius=16,
-                    padding=12,
+                    border_radius=Theme.PANEL_RADIUS,
+                    padding=Theme.PANEL_PADDING,
                 )
             )
         self.sections.controls = controls

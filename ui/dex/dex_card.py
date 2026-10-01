@@ -15,7 +15,7 @@ class DexCard(BaseWidget):
     IMAGE_SIZE: ClassVar[int] = 72
     LOCKED_NAME: ClassVar[str] = "???"
     LOCKED_BORDER: ClassVar[str] = "#55FFFFFF"
-    CARD_COLOR: ClassVar[str] = "black54"
+    CARD_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     SELECTED_WIDTH: ClassVar[int] = 3
     NORMAL_WIDTH: ClassVar[int] = 1
 
@@ -40,7 +40,7 @@ class DexCard(BaseWidget):
                     self._image(),
                     ft.Text(
                         name,
-                        size=12,
+                        size=Theme.SMALL_SIZE,
                         color=ft.Colors.WHITE,
                         max_lines=1,
                         overflow=ft.TextOverflow.ELLIPSIS,

@@ -11,7 +11,7 @@ from ui.focus.cpego_bot import CpegoMessage
 
 
 class CpegoBubble(BaseWidget):
-    IMAGE_PATH: ClassVar[str] = "cpego/cpego.png"
+    IMAGE_PATH: ClassVar[str] = "logo/cpego_logo.png"
     IMAGE_SIZE: ClassVar[int] = 72
     MAX_TEXT_WIDTH: ClassVar[int] = 240
     TEXT_SIZE: ClassVar[int] = 14

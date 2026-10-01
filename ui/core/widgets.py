@@ -21,7 +21,8 @@ class PixelButton(BaseWidget):
 
     def build(self) -> ft.Control:
         return ft.FilledButton(
-            content=ft.Text(self.text, color=ft.Colors.WHITE),
+            content=ft.Text(self.text, color=ft.Colors.WHITE, size=Theme.BODY_SIZE, weight=ft.FontWeight.BOLD),
+            height=Theme.BUTTON_HEIGHT,
             disabled=self.disabled,
             style=ft.ButtonStyle(
                 bgcolor=_VARIANT_COLORS.get(self.variant, Theme.PRIMARY),

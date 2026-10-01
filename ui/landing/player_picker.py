@@ -10,9 +10,8 @@ from ui.core.theme import Theme
 MAX_NICKNAME_LENGTH = 20
 FONT_PIXEL = getattr(Theme, "FONT_PIXEL", "Pixel")
 
-# ค่าสีสำหรับปุ่มสไตล์ Pixel
-BG_NORMAL = "#E8C88A"  # สีเหลืองส้มครีมเข้ม (สถานะปกติ)
-BG_HOVER = "#FFE8AD"   # สีเหลืองครีมสว่าง (สถานะเมื่อเมาส์ชี้)
+BG_NORMAL = "#E8C88A"
+BG_HOVER = "#FFE8AD"
 BORDER_COLOR = "#6D4348"
 TEXT_COLOR = "#734547"
 
@@ -38,7 +37,6 @@ class PlayerPicker(BaseWidget):
         on_click_callback: Callable[[], None],
         width: int = 260,
     ) -> ft.Container:
-        """สร้างปุ่มที่รองรับการเปลี่ยนสีตามสถานะ Normal / Hover / Click"""
         button_text = ft.Text(
             text,
             color=TEXT_COLOR,
@@ -61,7 +59,6 @@ class PlayerPicker(BaseWidget):
         )
 
         def handle_hover(e: ft.ControlEvent) -> None:
-            # ใช้ e.data == "true" ในการเช็คสถานะเมาส์วาง
             is_hovered = e.data == "true" or e.data is True
             container.bgcolor = BG_HOVER if is_hovered else BG_NORMAL
             container.update()
@@ -95,7 +92,6 @@ class PlayerPicker(BaseWidget):
             visible=False,
         )
 
-        # รายชื่อผู้เล่นพร้อม Effect ชี้เมาส์
         player_rows: list[ft.Control] = []
         for player in self.players:
             p_text = ft.Text(
@@ -135,7 +131,6 @@ class PlayerPicker(BaseWidget):
             p_container.on_hover = make_hover(p_container)
             player_rows.append(p_container)
 
-        # ปุ่ม CREATE
         create_button = self._create_hoverable_button(
             text="CREATE",
             on_click_callback=lambda: self.on_create(

@@ -19,10 +19,10 @@ if TYPE_CHECKING:
 class HatchView(BaseView):
     route: ClassVar[str] = "/hatch"
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/hatch_background.png"
-    PANEL_COLOR: ClassVar[str] = "black54"
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     TITLE: ClassVar[str] = "HATCHING..."
     TADA_SOUND: ClassVar[str] = "tada"
-    WAITING_TEXT: ClassVar[str] = "กำลังฟัก..."
+    WAITING_TEXT: ClassVar[str] = "Hatching..."
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)
@@ -44,8 +44,8 @@ class HatchView(BaseView):
             color=ft.Colors.WHITE,
             text_align=ft.TextAlign.CENTER,
         )
-        self.detail_text = ft.Text("", size=14, color=ft.Colors.WHITE, text_align=ft.TextAlign.CENTER)
-        self.counter_text = ft.Text("", size=12, color="white70")
+        self.detail_text = ft.Text("", size=Theme.BODY_SIZE, color=ft.Colors.WHITE, text_align=ft.TextAlign.CENTER)
+        self.counter_text = ft.Text("", size=Theme.SMALL_SIZE, color="white70")
         self.slot = ft.Container(
             width=HatchAnimation.AREA_SIZE,
             height=HatchAnimation.AREA_SIZE,
@@ -58,7 +58,7 @@ class HatchView(BaseView):
         panel = ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Text(self.TITLE, size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    ft.Text(self.TITLE, size=Theme.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                     self.counter_text,
                     self.slot,
                     self.name_text,
@@ -69,12 +69,12 @@ class HatchView(BaseView):
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=12,
+                spacing=Theme.SPACING,
                 tight=True,
             ),
             bgcolor=self.PANEL_COLOR,
-            border_radius=16,
-            padding=20,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
         )
 
         return ft.Stack(
@@ -88,7 +88,7 @@ class HatchView(BaseView):
                 ft.Container(
                     content=panel,
                     alignment=ft.Alignment.CENTER,
-                    padding=16,
+                    padding=Theme.PAGE_PADDING,
                     left=0,
                     right=0,
                     top=0,
@@ -168,7 +168,7 @@ class HatchView(BaseView):
         else:
             self.counter_text.value = ""
         if revealed:
-            badge = "ตัวใหม่!" if result.is_new else f"Level up! Lv.{result.pet.level}"
+            badge = "NEW!" if result.is_new else f"Level up! Lv.{result.pet.level}"
             self.name_text.value = f"Congrats! {nickname} got {result.pet.species.name}"
             self.detail_text.value = f"{Format.tier_name(result.tier)} · {result.pet.species.rarity.value.upper()} · {badge}"
             self.detail_text.color = Theme.rarity_color(result.pet.species.rarity)

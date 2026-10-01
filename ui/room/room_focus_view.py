@@ -8,6 +8,7 @@ import flet as ft
 from app.domain.enums import RoomStatus
 from app.dto import RoomDTO, RoomStopResult, TierOdds
 from app.errors import AppError
+from ui.core.theme import Theme
 from ui.core.base_view import BaseView
 from ui.core.format import Format
 from ui.core.widgets import ConfirmDialog, PixelButton
@@ -24,11 +25,11 @@ if TYPE_CHECKING:
 class RoomFocusView(BaseView):
     route: ClassVar[str] = "/room"
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/room_background.png"
-    PANEL_COLOR: ClassVar[str] = "black54"
-    TIME_SIZE: ClassVar[int] = 64
-    PANEL_WIDTH: ClassVar[int] = 400
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
+    TIME_SIZE: ClassVar[int] = Theme.CLOCK_SIZE
+    PANEL_WIDTH: ClassVar[int] = Theme.CONTENT_WIDTH
     INITIAL_TIME: ClassVar[str] = "00:00"
-    CONFIRM_TITLE: ClassVar[str] = "หยุดตอนนี้ ทุกคนในห้องจะได้ผลเดียวกัน ถ้ายังไม่ครบ 15 นาทีจะไม่มีใครได้ไข่"
+    CONFIRM_TITLE: ClassVar[str] = "Stop now? Everyone in the room gets the same result. Before 15 minutes, nobody gets an egg."
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)
@@ -48,7 +49,7 @@ class RoomFocusView(BaseView):
         self.subject_text = ft.Text("", size=20, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
         self.time_text = ft.Text(self.INITIAL_TIME, size=self.TIME_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
         self.members_slot = ft.Container()
-        self.odds_panel = EggOddsPanel(brackets)
+        self.odds_panel = EggOddsPanel(brackets, text_color=ft.Colors.WHITE)
         self.bot = CpegoBot(brackets)
         self.bubble = CpegoBubble()
         self.confirm = ConfirmDialog(self.CONFIRM_TITLE, on_yes=self.confirm_stop)
@@ -57,7 +58,7 @@ class RoomFocusView(BaseView):
         panel = ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Text("GROUP STUDY", size=14, color="white70"),
+                    ft.Text("GROUP STUDY", size=Theme.BODY_SIZE, color="white70"),
                     self.subject_text,
                     self.time_text,
                     self.members_slot,
@@ -65,19 +66,19 @@ class RoomFocusView(BaseView):
                     stop_button.control,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=12,
+                spacing=Theme.SPACING,
                 tight=True,
                 scroll=ft.ScrollMode.AUTO,
             ),
             bgcolor=self.PANEL_COLOR,
-            border_radius=16,
-            padding=16,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PAGE_PADDING,
         )
 
         return ft.Stack(
             controls=[
                 ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, width=float("inf"), height=float("inf")),
-                ft.Container(content=panel, alignment=ft.Alignment.CENTER, padding=16, left=0, right=0, top=0, bottom=0),
+                ft.Container(content=panel, alignment=ft.Alignment.CENTER, padding=Theme.PAGE_PADDING, left=0, right=0, top=0, bottom=0),
                 ft.Container(content=self.bubble.control, right=16, bottom=16),
             ],
             expand=True,
@@ -138,7 +139,7 @@ class RoomFocusView(BaseView):
 
     def _show_room(self, room: RoomDTO) -> None:
         if self.subject_text is not None:
-            self.subject_text.value = f"{room.subject} · {len(room.members)} คน"
+            self.subject_text.value = f"{room.subject} · {len(room.members)} members"
             self.subject_text.update()
         if self.members_slot is not None:
             self.members = MemberList(room.members)

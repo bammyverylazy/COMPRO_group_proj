@@ -6,6 +6,7 @@ import flet as ft
 
 from app.dto import SessionReport
 from app.errors import AppError
+from ui.core.theme import Theme
 from ui.core.base_view import BaseView
 from ui.core.widgets import PixelButton
 from ui.result.result_card import ResultCard
@@ -15,9 +16,9 @@ class ResultView(BaseView):
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/result_background.png"
     route: ClassVar[str] = "/result"
     TITLE: ClassVar[str] = "RESULT"
-    TITLE_SIZE: ClassVar[int] = 28
-    SPACING: ClassVar[int] = 12
-    PADDING: ClassVar[int] = 16
+    TITLE_SIZE: ClassVar[int] = Theme.TITLE_SIZE
+    SPACING: ClassVar[int] = Theme.SPACING
+    PADDING: ClassVar[int] = Theme.PAGE_PADDING
 
     def __init__(self, ctx: Any, **params: Any) -> None:
         super().__init__(ctx, **params)

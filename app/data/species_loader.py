@@ -24,30 +24,30 @@ class SpeciesLoader:
 
     def _read_rows(self) -> list[dict[str, Any]]:
         if not self.path.is_file():
-            raise AppError(f"ไม่พบไฟล์รายชื่อสัตว์ {self.path}")
+            raise AppError(f"Species file not found: {self.path}")
         try:
             with self.path.open("r", encoding="utf-8") as file:
                 rows = json.load(file)
         except json.JSONDecodeError as error:
             raise AppError(
-                f"ไฟล์ {self.path.name} ไม่ใช่ JSON ที่ถูกต้อง") from error
+                f"{self.path.name} is not valid JSON") from error
         if not isinstance(rows, list):
-            raise AppError(f"ไฟล์ {self.path.name} ต้องเป็น list ของสัตว์")
+            raise AppError(f"{self.path.name} must be a list of species")
         return rows
 
     def _to_species(self, row: Any, index: int) -> Species:
         if not isinstance(row, dict):
             raise AppError(
-                f"สัตว์ตัวที่ {index} ใน {self.path.name} ต้องเป็น object")
+                f"Species #{index} in {self.path.name} must be an object")
         missing = [field for field in self.REQUIRED_FIELDS if field not in row]
         if missing:
-            raise AppError(f"สัตว์ตัวที่ {index} ขาด {', '.join(missing)}")
+            raise AppError(f"Species #{index} is missing {', '.join(missing)}")
         try:
             tier = EggTier(row["tier"])
             rarity = Rarity(row["rarity"])
         except ValueError as error:
             raise AppError(
-                f"สัตว์ {row['code']} มี tier หรือ rarity ไม่ถูกต้อง") from error
+                f"Species {row['code']} has an invalid tier or rarity") from error
         return Species(
             code=row["code"],
             name=row["name"],
@@ -61,5 +61,5 @@ class SpeciesLoader:
         seen: set[str] = set()
         for species in species_list:
             if species.code in seen:
-                raise AppError(f"code {species.code} ซ้ำใน {self.path.name}")
+                raise AppError(f"Duplicate code {species.code} in {self.path.name}")
             seen.add(species.code)

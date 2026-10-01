@@ -12,8 +12,8 @@ from ui.core.theme import Theme
 
 class DexDetailPanel(BaseWidget):
     IMAGE_SIZE: ClassVar[int] = 140
-    PANEL_COLOR: ClassVar[str] = "black54"
-    EMPTY_TEXT: ClassVar[str] = "กดเลือกสัตว์เพื่อดูรายละเอียด"
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
+    EMPTY_TEXT: ClassVar[str] = "Tap a creature to see its details"
     LOCKED_NAME: ClassVar[str] = "???"
 
     def __init__(self, entry: DexEntry | None = None) -> None:
@@ -31,8 +31,8 @@ class DexDetailPanel(BaseWidget):
         return ft.Container(
             content=self._body,
             bgcolor=self.PANEL_COLOR,
-            border_radius=16,
-            padding=16,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PAGE_PADDING,
         )
 
     def show(self, entry: DexEntry) -> None:
@@ -55,15 +55,15 @@ class DexDetailPanel(BaseWidget):
         subjects_text = ", ".join(entry.subjects) if entry.subjects else "-"
         controls: list[ft.Control] = [
             ft.Image(src=species.sprite_path, width=self.IMAGE_SIZE, height=self.IMAGE_SIZE, fit=ft.BoxFit.CONTAIN),
-            ft.Text(species.name, size=22, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+            ft.Text(species.name, size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
             ft.Row(
                 controls=[self._chip(Format.tier_name(species.tier), Theme.PRIMARY), self._rarity_chip(entry)],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             self._line("Level", str(entry.level)),
-            self._line("ฟักได้", f"{entry.times_hatched} ครั้ง"),
-            self._line("ได้ครั้งแรก", first_text),
-            self._line("วิชาที่อ่านตอนได้", subjects_text),
+            self._line("Hatched", f"{entry.times_hatched} times"),
+            self._line("First hatched", first_text),
+            self._line("Subjects", subjects_text),
         ]
         if species.description:
             controls.append(ft.Text(species.description, color=ft.Colors.WHITE, text_align=ft.TextAlign.CENTER))
@@ -81,13 +81,13 @@ class DexDetailPanel(BaseWidget):
                 color_blend_mode=ft.BlendMode.SRC_IN,
                 opacity=0.7,
             ),
-            ft.Text(self.LOCKED_NAME, size=22, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+            ft.Text(self.LOCKED_NAME, size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
             ft.Row(
                 controls=[self._chip(Format.tier_name(species.tier), Theme.PRIMARY), self._rarity_chip(entry)],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
             ft.Text(
-                f"ยังไม่ได้ปลดล็อก · ลองฟัก{Format.tier_name(species.tier)}ดูสิ",
+                f"Not unlocked yet · try hatching a {Format.tier_name(species.tier)}",
                 color=ft.Colors.WHITE,
                 text_align=ft.TextAlign.CENTER,
             ),
@@ -99,7 +99,7 @@ class DexDetailPanel(BaseWidget):
 
     def _chip(self, text: str, color: str) -> ft.Control:
         return ft.Container(
-            content=ft.Text(text, size=12, color=ft.Colors.WHITE),
+            content=ft.Text(text, size=Theme.SMALL_SIZE, color=ft.Colors.WHITE),
             bgcolor=color,
             border_radius=10,
             padding=ft.Padding.symmetric(horizontal=10, vertical=2),

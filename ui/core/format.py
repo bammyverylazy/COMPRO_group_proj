@@ -2,9 +2,9 @@ from __future__ import annotations
 from app.domain.enums import EggTier
 
 _TIER_NAMES_TH: dict[EggTier, str] = {
-    EggTier.FRESHMAN: "ไข่รุ่นเรา",
-    EggTier.SENIOR: "ไข่รุ่นพี่",
-    EggTier.PROFESSOR: "ไข่อาจารย์",
+    EggTier.FRESHMAN: "Freshman Egg",
+    EggTier.SENIOR: "Senior Egg",
+    EggTier.PROFESSOR: "Professor Egg",
 }
 
 
@@ -19,8 +19,8 @@ class Format:
         hours, remainder = divmod(seconds, 3600)
         minutes = remainder // 60
         if hours > 0:
-            return f"{hours} ชม. {minutes} นาที"
-        return f"{minutes} นาที"
+            return f"{hours} h {minutes} min"
+        return f"{minutes} min"
 
     @staticmethod
     def percent(value: float) -> str:

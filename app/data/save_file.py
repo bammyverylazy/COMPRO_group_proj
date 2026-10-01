@@ -21,9 +21,9 @@ class SaveFile:
             with self.path.open("r", encoding="utf-8") as file:
                 data = json.load(file)
         except json.JSONDecodeError as error:
-            raise AppError(f"ไฟล์ {self.path.name} เสีย อ่านไม่ได้") from error
+            raise AppError(f"Save file {self.path.name} is corrupted") from error
         if not isinstance(data, dict):
-            raise AppError(f"ไฟล์ {self.path.name} รูปแบบไม่ถูกต้อง")
+            raise AppError(f"Save file {self.path.name} has an invalid format")
         return data
 
     def write(self, data: dict[str, Any]) -> None:

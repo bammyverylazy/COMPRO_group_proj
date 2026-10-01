@@ -22,10 +22,10 @@ class ResultCard(BaseWidget):
     SECONDS_PER_MINUTE: ClassVar[int] = 60
     SPRITE_SIZE: ClassVar[int] = 96
     EGG_SIZE: ClassVar[int] = 44
-    TITLE_SIZE: ClassVar[int] = 18
-    CARD_PADDING: ClassVar[int] = 16
-    CARD_RADIUS: ClassVar[int] = 12
-    CARD_COLOR: ClassVar[str] = "black54"
+    TITLE_SIZE: ClassVar[int] = Theme.TITLE_SIZE
+    CARD_PADDING: ClassVar[int] = Theme.PANEL_PADDING
+    CARD_RADIUS: ClassVar[int] = Theme.PANEL_RADIUS
+    CARD_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     CARD_WIDTH: ClassVar[int] = 360
 
     def __init__(self, report: SessionReport, nickname: str) -> None:
@@ -67,7 +67,7 @@ class ResultCard(BaseWidget):
                 )
             )
         if pet is not None:
-            badge = "ตัวใหม่!" if self.report.is_new else f"LEVEL UP! Lv.{pet.level}"
+            badge = "NEW!" if self.report.is_new else f"LEVEL UP! Lv.{pet.level}"
             sprite_size = int(self.SPRITE_SIZE * pet.scale)
             controls.extend(
                 [
@@ -77,7 +77,7 @@ class ResultCard(BaseWidget):
                     ft.Text(badge, color=Theme.ACCENT, weight=ft.FontWeight.BOLD),
                 ]
             )
-        controls.append(ft.Text(f"อ่านไป {Format.duration(self.report.duration_sec)}", color=ft.Colors.WHITE))
+        controls.append(ft.Text(f"Studied {Format.duration(self.report.duration_sec)}", color=ft.Colors.WHITE))
         return ft.Column(controls, horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=4, tight=True)
 
     def _build_failed(self) -> ft.Control:
@@ -94,9 +94,9 @@ class ResultCard(BaseWidget):
                     color_blend_mode=ft.BlendMode.SRC_IN,
                     opacity=0.5,
                 ),
-                ft.Text("ยังไม่ได้ไข่", size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                ft.Text(f"อ่านไป {Format.duration(self.report.duration_sec)}", color=ft.Colors.WHITE),
-                ft.Text(f"ต้องอ่านอีก {remaining_minutes} นาที", color=Theme.ACCENT, weight=ft.FontWeight.BOLD),
+                ft.Text("No egg this time", size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                ft.Text(f"Studied {Format.duration(self.report.duration_sec)}", color=ft.Colors.WHITE),
+                ft.Text(f"Study {remaining_minutes} more min to get an egg", color=Theme.ACCENT, weight=ft.FontWeight.BOLD),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=4,

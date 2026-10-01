@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from functools import partial
 from typing import Callable, ClassVar
 
 import flet as ft
@@ -14,7 +13,7 @@ from ui.core.widgets import PixelButton
 
 class MemberPicker(BaseWidget):
     LIST_HEIGHT: ClassVar[int] = 220
-    FIELD_LABEL: ClassVar[str] = "เพิ่มชื่อเล่นใหม่"
+    FIELD_LABEL: ClassVar[str] = "Add a new nickname"
     MAX_NICKNAME: ClassVar[int] = 20
 
     def __init__(
@@ -88,14 +87,11 @@ class MemberPicker(BaseWidget):
             ft.Checkbox(
                 label=player.nickname,
                 value=player.id in self.selected_ids,
-                on_change=partial(self._handle_toggle, player.id),
+                on_change=lambda event, player_id=player.id: self.toggle(player_id),
                 label_style=ft.TextStyle(color=ft.Colors.WHITE),
             )
             for player in self.players
         ]
-
-    def _handle_toggle(self, player_id: int, event: ft.ControlEvent) -> None:
-        self.toggle(player_id)
 
     def _handle_submit(self, event: ft.ControlEvent) -> None:
         self.add_player()
@@ -108,7 +104,7 @@ class MemberPicker(BaseWidget):
 
     def _sync_count(self) -> None:
         if self._count_text is not None:
-            self._count_text.value = f"เลือกแล้ว {len(self.selected_ids)} / {self.max_members} คน"
+            self._count_text.value = f"Selected {len(self.selected_ids)} / {self.max_members}"
 
     def _show_error(self, message: str) -> None:
         if self._error_text is None:

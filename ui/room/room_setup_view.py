@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 class RoomSetupView(BaseView):
     route: ClassVar[str] = "/room/setup"
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/room_background.png"
-    PANEL_COLOR: ClassVar[str] = "black54"
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     TITLE: ClassVar[str] = "GROUP STUDY"
-    HINT: ClassVar[str] = "ทุกคนอ่านพร้อมกัน ได้ผลเดียวกัน: หยุดก่อน 15 นาทีไม่มีใครได้ไข่"
+    HINT: ClassVar[str] = "Everyone studies together and shares one fate: stop before 15 minutes and nobody gets an egg."
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)
@@ -37,7 +37,7 @@ class RoomSetupView(BaseView):
         player = self.ctx.player
         if player is not None:
             self.picker.selected_ids.add(player.id)
-        self.subject_field = ft.TextField(label="ชื่อวิชา", on_submit=self._handle_submit)
+        self.subject_field = ft.TextField(label="Subject", on_submit=self._handle_submit)
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         back_button = PixelButton("BACK", self.back, variant="secondary")
         start_button = PixelButton("START", self.start)
@@ -45,8 +45,8 @@ class RoomSetupView(BaseView):
         panel = ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Text(self.TITLE, size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                    ft.Text(self.HINT, size=12, color=ft.Colors.WHITE),
+                    ft.Text(self.TITLE, size=Theme.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    ft.Text(self.HINT, size=Theme.SMALL_SIZE, color=ft.Colors.WHITE),
                     self.picker.control,
                     self.subject_field,
                     self.error_text,
@@ -60,14 +60,14 @@ class RoomSetupView(BaseView):
                 scroll=ft.ScrollMode.AUTO,
             ),
             bgcolor=self.PANEL_COLOR,
-            border_radius=16,
-            padding=16,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PAGE_PADDING,
         )
 
         return ft.Stack(
             controls=[
                 ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, width=float("inf"), height=float("inf")),
-                ft.Container(content=panel, alignment=ft.Alignment.CENTER, padding=16, left=0, right=0, top=0, bottom=0),
+                ft.Container(content=panel, alignment=ft.Alignment.CENTER, padding=Theme.PAGE_PADDING, left=0, right=0, top=0, bottom=0),
             ],
             expand=True,
         )

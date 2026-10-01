@@ -23,7 +23,7 @@ class RoomService:
     def create_room(self, member_ids: list[int], subject: str) -> RoomDTO:
         clean_subject = subject.strip()
         if not clean_subject:
-            raise ValidationError("กรุณาใส่ชื่อวิชา", field="subject")
+            raise ValidationError("Please enter a subject", field="subject")
         self._validate_members(member_ids)
         started_at = self.clock.now()
         session_ids: list[int] = []
@@ -61,7 +61,7 @@ class RoomService:
     def stop(self, room_id: int) -> RoomStopResult:
         room = self.store.rooms.get(room_id)
         if room.status is not RoomStatus.RUNNING:
-            raise InvalidStateError("ห้องนี้หยุดไปแล้ว")
+            raise InvalidStateError("This room has already stopped")
         ended_at = self.clock.now()
         duration_sec = self.clock.elapsed_sec(room.started_at)
         min_success_sec = self._min_success_sec()
@@ -82,7 +82,7 @@ class RoomService:
     def hatch(self, room_id: int) -> RoomHatchResult:
         room = self.store.rooms.get(room_id)
         if not room.can_hatch():
-            raise InvalidStateError("ห้องนี้ยังฟักไข่ไม่ได้")
+            raise InvalidStateError("This room is not ready to hatch")
         tier = self.hatch_service.roll_tier(room.duration_sec)
         results = [self.hatch_service.hatch(session_id, tier) for session_id in room.session_ids]
         room.mark_hatched(tier)
@@ -93,15 +93,15 @@ class RoomService:
         count = len(member_ids)
         if count < self.settings.min_room_members or count > self.settings.max_room_members:
             raise ValidationError(
-                f"สมาชิกต้องมี {self.settings.min_room_members}-{self.settings.max_room_members} คน",
+                f"A room needs {self.settings.min_room_members}-{self.settings.max_room_members} members",
                 field="member_ids",
             )
         if len(set(member_ids)) != count:
-            raise ValidationError("เลือกสมาชิกซ้ำ", field="member_ids")
+            raise ValidationError("A member was selected twice", field="member_ids")
         for player_id in member_ids:
             player = self.store.players.get(player_id)
             if self.store.sessions.get_running(player_id) is not None:
-                raise InvalidStateError(f"{player.nickname} มีรอบที่อ่านค้างอยู่")
+                raise InvalidStateError(f"{player.nickname} already has a session in progress")
 
     def _to_dto(self, room: GroupRoom) -> RoomDTO:
         members = [self.store.players.get(player_id).to_dto() for player_id in room.member_ids]

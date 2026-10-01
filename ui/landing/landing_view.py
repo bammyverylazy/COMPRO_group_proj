@@ -7,7 +7,6 @@ from app.dto import PlayerDTO
 from app.errors import ValidationError
 from ui.core.base_view import BaseView
 from ui.core.theme import Theme
-from ui.core.widgets import PixelButton
 from ui.landing.howto_popup import HowToPopup
 from ui.landing.player_picker import PlayerPicker
 
@@ -48,9 +47,9 @@ class LandingView(BaseView):
 
         picker_card = ft.Container(
             content=self.picker.control,
-            bgcolor="black54",
-            border_radius=16,
-            padding=20,
+            bgcolor=Theme.PANEL_COLOR,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
         )
 
         return ft.Stack(
@@ -62,7 +61,7 @@ class LandingView(BaseView):
                     height=float("inf"),
                 ),
                 ft.Container(
-                    padding=24,
+                    padding=Theme.PAGE_PADDING,
                     alignment=ft.Alignment(0, 0),
                     content=ft.Column(
                         [
@@ -76,7 +75,7 @@ class LandingView(BaseView):
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=20,
+                        spacing=Theme.SPACING,
                     ),
                 ),
             ],
@@ -84,7 +83,6 @@ class LandingView(BaseView):
         )
 
     def _on_howto_hover(self, e: ft.ControlEvent) -> None:
-        """สลับรูปภาพปุ่ม HOW TO เมื่อเมาส์ชี้เข้า-ออก"""
         is_hovered = e.data == "true" or e.data is True
         self._howto_img.src = (
             "buttons/howto_hover.PNG" if is_hovered else "buttons/howto_normal.PNG"

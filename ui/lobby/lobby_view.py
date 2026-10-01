@@ -24,12 +24,12 @@ class LobbyView(BaseView):
     MAP_WIDTH: ClassVar[float] = 1024
     MAP_HEIGHT: ClassVar[float] = 691
     MAX_SCALE: ClassVar[float] = 2.0
-    BUTTON_HEIGHT: ClassVar[float] = 52
-    PANEL_COLOR: ClassVar[str] = "black54"
+    BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
     POPUP_PADDING: ClassVar[int] = 20
     POPUP_RADIUS: ClassVar[int] = 16
-    EMPTY_TEXT: ClassVar[str] = "ห้องยังว่างอยู่\nกด START แล้วอ่านให้ครบ 15 นาที เพื่อฟักไข่ตัวแรก!"
+    EMPTY_TEXT: ClassVar[str] = "Your room is empty.\nPress START and study for 15 minutes to hatch your first egg!"
 
     def __init__(
         self,
@@ -62,7 +62,7 @@ class LobbyView(BaseView):
             content=self.scene.control,
         )
 
-        self.status_text = ft.Text("", color=ft.Colors.WHITE, size=14)
+        self.status_text = ft.Text("", color=ft.Colors.WHITE, size=Theme.BODY_SIZE)
         self.empty_hint = ft.Container(
             content=ft.Text(
                 self.EMPTY_TEXT,
@@ -71,7 +71,7 @@ class LobbyView(BaseView):
             ),
             bgcolor=self.PANEL_COLOR,
             border_radius=12,
-            padding=16,
+            padding=Theme.PAGE_PADDING,
             visible=False,
         )
 
@@ -163,7 +163,7 @@ class LobbyView(BaseView):
 
     def _show_status(self, nickname: str, pet_count: int) -> None:
         if self.status_text is not None:
-            self.status_text.value = f"{nickname} · สัตว์ในห้อง {pet_count} ตัว"
+            self.status_text.value = f"{nickname} · {pet_count} creatures"
             self.status_text.update()
         if self.empty_hint is not None:
             self.empty_hint.visible = pet_count == 0
@@ -171,7 +171,7 @@ class LobbyView(BaseView):
 
     def _build_top_bar(self) -> ft.Control:
         switch_button = ft.TextButton(
-            content=ft.Text("เปลี่ยนผู้เล่น", color=ft.Colors.WHITE),
+            content=ft.Text("SWITCH PLAYER", color=ft.Colors.WHITE),
             on_click=self._handle_switch,
         )
         return ft.Container(
@@ -227,7 +227,7 @@ class LobbyView(BaseView):
                 tight=True,
             ),
             bgcolor=self.PANEL_COLOR,
-            padding=12,
+            padding=Theme.PANEL_PADDING,
         )
 
     def _handle_switch(self, event: ft.ControlEvent) -> None:
@@ -245,7 +245,7 @@ class LobbyView(BaseView):
             content=card,
             bgcolor=self.OVERLAY_COLOR,
             alignment=ft.Alignment.CENTER,
-            padding=16,
+            padding=Theme.PAGE_PADDING,
             expand=True,
         )
         self.ctx.page.overlay.append(self._overlay)

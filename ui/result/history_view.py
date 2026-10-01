@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from functools import partial
 from typing import Any, ClassVar
 
 import flet as ft
@@ -20,12 +19,12 @@ class HistoryView(BaseView):
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/result_background.png"
     route: ClassVar[str] = "/history"
     TITLE: ClassVar[str] = "HISTORY"
-    TITLE_SIZE: ClassVar[int] = 28
-    EMPTY_TEXT: ClassVar[str] = "ยังไม่มีประวัติการอ่าน ลองกด START ที่ Lobby ดูนะ"
-    PANEL_COLOR: ClassVar[str] = "black54"
+    TITLE_SIZE: ClassVar[int] = Theme.TITLE_SIZE
+    EMPTY_TEXT: ClassVar[str] = "No study history yet. Press START in the lobby to begin!"
+    PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     CHART_HEIGHT: ClassVar[int] = 120
-    SPACING: ClassVar[int] = 12
-    PADDING: ClassVar[int] = 16
+    SPACING: ClassVar[int] = Theme.SPACING
+    PADDING: ClassVar[int] = Theme.PAGE_PADDING
     EGG_IMAGES: ClassVar[dict[EggTier, str]] = {
         EggTier.FRESHMAN: "eggs/freshman_egg.png",
         EggTier.SENIOR: "eggs/senior_egg.png",
@@ -72,7 +71,7 @@ class HistoryView(BaseView):
     def render_row(self, report: SessionReport) -> ft.Control:
         moment = report.ended_at or report.started_at
         date_text = moment.astimezone().strftime("%d/%m") if moment is not None else date.today().strftime("%d/%m")
-        result_text = "สำเร็จ" if report.is_success else "ไม่สำเร็จ"
+        result_text = "Hatched" if report.is_success else "Failed"
         result_color = Theme.ACCENT if report.is_success else "white70"
         leading: ft.Control = ft.Container(width=28)
         if report.tier is not None:
@@ -93,7 +92,7 @@ class HistoryView(BaseView):
             bgcolor=self.PANEL_COLOR,
             padding=ft.Padding.symmetric(horizontal=10, vertical=6),
             border_radius=10,
-            #on_click=partial(self._on_row_click, report.session_id),
+            on_click=lambda event, session_id=report.session_id: self.open_report(session_id),
         )
 
     def open_report(self, session_id: int) -> None:
@@ -101,9 +100,6 @@ class HistoryView(BaseView):
 
     def close(self) -> None:
         self.ctx.nav.go("/lobby")
-
-    def _on_row_click(self, session_id: int, event: ft.ControlEvent) -> None:
-        self.open_report(session_id)
 
     def _content(self) -> list[ft.Control]:
         header = ft.Row(
@@ -123,9 +119,9 @@ class HistoryView(BaseView):
     def _stats_section(self, history: History) -> list[ft.Control]:
         stats = history.stats
         stat_tiles = [
-            StatTile("รอบทั้งหมด", str(stats.total_sessions)).control,
-            StatTile("อัตราสำเร็จ", f"{stats.success_rate:.0%}").control,
-            StatTile("เวลารวม", Format.duration(stats.total_study_sec)).control,
+            StatTile("Sessions", str(stats.total_sessions)).control,
+            StatTile("Success rate", f"{stats.success_rate:.0%}").control,
+            StatTile("Total time", Format.duration(stats.total_study_sec)).control,
         ]
         egg_row = ft.Row(
             controls=[
@@ -142,13 +138,13 @@ class HistoryView(BaseView):
         )
         controls: list[ft.Control] = [
             ft.Row(stat_tiles, wrap=True, alignment=ft.MainAxisAlignment.CENTER),
-            self._panel([self._section_title("ไข่ที่ได้"), egg_row]),
+            self._panel([self._section_title("Eggs hatched"), egg_row]),
         ]
         if self.daily_chart is not None:
-            controls.append(self._panel([self._section_title("7 วันล่าสุด"), self.daily_chart.control]))
+            controls.append(self._panel([self._section_title("Last 7 days"), self.daily_chart.control]))
         if self.subject_chart is not None:
-            controls.append(self._panel([self._section_title("แยกตามวิชา"), self.subject_chart.control]))
-        controls.append(self._section_title("ทุกรอบ (กดเพื่อดูผล)"))
+            controls.append(self._panel([self._section_title("By subject"), self.subject_chart.control]))
+        controls.append(self._section_title("All sessions (tap to view)"))
         controls.extend(self.render_row(report) for report in history.reports)
         return controls
 
@@ -156,12 +152,12 @@ class HistoryView(BaseView):
         return ft.Container(
             content=ft.Column(controls, spacing=8, tight=True),
             bgcolor=self.PANEL_COLOR,
-            border_radius=16,
-            padding=12,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
         )
 
     def _section_title(self, text: str) -> ft.Control:
-        return ft.Text(text, size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
+        return ft.Text(text, size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
 
     def _short_date(self, iso_day: str) -> str:
         return date.fromisoformat(iso_day).strftime("%d/%m")
