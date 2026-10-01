@@ -35,7 +35,7 @@ class Egg(ABC):
 class FreshmanEgg(Egg):
     tier = EggTier.FRESHMAN
     name_th = "ไข่รุ่นเรา"
-    image_path = "eggs/freshman.png"
+    image_path = "eggs/freshman_egg.png"
 
     def rarity_weights(self) -> dict[Rarity, int]:
         return {
@@ -49,7 +49,7 @@ class FreshmanEgg(Egg):
 class SeniorEgg(Egg):
     tier = EggTier.SENIOR
     name_th = "ไข่รุ่นพี่"
-    image_path = "eggs/senior.png"
+    image_path = "eggs/senior_egg.png"
 
     def rarity_weights(self) -> dict[Rarity, int]:
         return {
@@ -63,7 +63,7 @@ class SeniorEgg(Egg):
 class ProfessorEgg(Egg):
     tier = EggTier.PROFESSOR
     name_th = "ไข่อาจารย์"
-    image_path = "eggs/professor.png"
+    image_path = "eggs/professor_egg.png"
 
     def rarity_weights(self) -> dict[Rarity, int]:
         return {
