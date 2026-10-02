@@ -13,6 +13,8 @@ def main(page: ft.Page) -> None:
     page.window.resizable = False
     page.padding = 0
     page.spacing = 0
+    page.fonts = {"Pixel": "fonts/PSLCD3310.ttf"}
+    page.theme = ft.Theme(font_family="Pixel")
     ctx = AppContext.create(page, Settings())
     ctx.nav.start()
 
