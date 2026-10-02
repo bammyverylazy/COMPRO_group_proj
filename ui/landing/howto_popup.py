@@ -23,8 +23,8 @@ class HowToPopup(BaseWidget):
     BORDER_COLOR: str = "#6D4348"
     TITLE_COLOR: str = "#734547"
     BORDER_WIDTH: int = 3
-    OVERLAY_COLOR: str = ft.Colors.with_opacity(0.6, ft.Colors.WHITE)
-
+    OVERLAY_COLOR: str = ft.Colors.with_opacity(0.6, ft.Colors.BLACK)
+    
     def __init__(self, slides: list[HowToSlide], on_close: Callable[[], None]) -> None:
         super().__init__()
         self.slides = slides
