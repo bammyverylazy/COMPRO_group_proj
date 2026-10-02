@@ -7,11 +7,14 @@ import flet as ft
 from app.dto import PlayerDTO
 from app.errors import AppError
 from ui.core.base_widget import BaseWidget
+from ui.core.theme import Theme
 from ui.core.widgets import PixelButton
 
 
 class MemberPicker(BaseWidget):
-    LIST_HEIGHT: ClassVar[int] = 240
+    LIST_HEIGHT: ClassVar[int] = 220
+    FIELD_LABEL: ClassVar[str] = "Add a new nickname"
+    MAX_NICKNAME: ClassVar[int] = 20
 
     def __init__(
         self,
@@ -25,62 +28,92 @@ class MemberPicker(BaseWidget):
         self.max_members: int = max_members
         self.selected_ids: set[int] = set()
         self.nickname_field: ft.TextField | None = None
-        self._rows: ft.Column | None = None
-        self._checkboxes: dict[int, ft.Checkbox] = {}
+        self._list: ft.Column | None = None
+        self._count_text: ft.Text | None = None
+        self._error_text: ft.Text | None = None
 
     def build(self) -> ft.Control:
+        self._count_text = ft.Text("", color=ft.Colors.WHITE)
+        self._list = ft.Column(controls=self._rows(), scroll=ft.ScrollMode.AUTO, height=self.LIST_HEIGHT, spacing=0)
         self.nickname_field = ft.TextField(
-            label="ชื่อเล่นใหม่",
+            label=self.FIELD_LABEL,
+            max_length=self.MAX_NICKNAME,
+            on_submit=self._handle_submit,
             expand=True,
-            on_submit=lambda _: self.add_player(),
+            color=ft.Colors.WHITE,
+            label_style=ft.TextStyle(color=ft.Colors.WHITE_70),
+            cursor_color=ft.Colors.WHITE,
+            border_color=ft.Colors.WHITE_70,
+            focused_border_color=Theme.ACCENT,
         )
-        self._rows = ft.Column(
-            [self._build_row(player) for player in self.players],
-            height=self.LIST_HEIGHT,
-            scroll=ft.ScrollMode.AUTO,
+        self._error_text = ft.Text("", color=Theme.ERROR, visible=False)
+        add_button = PixelButton("ADD", self.add_player, variant="secondary")
+        self._sync_count()
+        return ft.Column(
+            controls=[
+                self._count_text,
+                self._list,
+                ft.Row(controls=[self.nickname_field, add_button.control], vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                self._error_text,
+            ],
+            spacing=8,
+            tight=True,
         )
-        add_button = PixelButton("ADD", on_click=lambda _: self.add_player()).build()
-        return ft.Column([self._rows, ft.Row([self.nickname_field, add_button])])
 
     def toggle(self, player_id: int) -> None:
         if player_id in self.selected_ids:
             self.selected_ids.discard(player_id)
         elif len(self.selected_ids) < self.max_members:
             self.selected_ids.add(player_id)
-        self._sync_checkbox(player_id)
+        self._render()
 
     def add_player(self) -> None:
-        nickname = self.nickname_field.value.strip()
+        if self.nickname_field is None:
+            return
+        nickname = (self.nickname_field.value or "").strip()
         try:
             player = self.on_create(nickname)
         except AppError as error:
-            self.nickname_field.error_text = error.message
-            self.nickname_field.update()
+            self._show_error(error.message)
             return
         self.players.append(player)
-        self.toggle(player.id)
-        self._rows.controls.append(self._build_row(player))
         self.nickname_field.value = ""
-        self.nickname_field.error_text = None
-        self._rows.update()
-        self.nickname_field.update()
+        if len(self.selected_ids) < self.max_members:
+            self.selected_ids.add(player.id)
+        self._show_error("")
+        self._render()
 
     @property
     def selected(self) -> list[int]:
-        return sorted(self.selected_ids)
+        return [player.id for player in self.players if player.id in self.selected_ids]
 
-    def _build_row(self, player: PlayerDTO) -> ft.Control:
-        checkbox = ft.Checkbox(
-            label=player.nickname,
-            value=player.id in self.selected_ids,
-            on_change=lambda _, player_id=player.id: self.toggle(player_id),
-        )
-        self._checkboxes[player.id] = checkbox
-        return checkbox
+    def _rows(self) -> list[ft.Control]:
+        return [
+            ft.Checkbox(
+                label=player.nickname,
+                value=player.id in self.selected_ids,
+                on_change=lambda event, player_id=player.id: self.toggle(player_id),
+                label_style=ft.TextStyle(color=ft.Colors.WHITE),
+            )
+            for player in self.players
+        ]
 
-    def _sync_checkbox(self, player_id: int) -> None:
-        checkbox = self._checkboxes.get(player_id)
-        if checkbox is None:
+    def _handle_submit(self, event: ft.ControlEvent) -> None:
+        self.add_player()
+
+    def _render(self) -> None:
+        if self._list is not None:
+            self._list.controls = self._rows()
+        self._sync_count()
+        self.refresh()
+
+    def _sync_count(self) -> None:
+        if self._count_text is not None:
+            self._count_text.value = f"Selected {len(self.selected_ids)} / {self.max_members}"
+
+    def _show_error(self, message: str) -> None:
+        if self._error_text is None:
             return
-        checkbox.value = player_id in self.selected_ids
-        checkbox.update()
+        self._error_text.value = message
+        self._error_text.visible = bool(message)
+        self.refresh()

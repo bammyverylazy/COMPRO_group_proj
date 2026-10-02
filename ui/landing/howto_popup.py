@@ -7,6 +7,7 @@ import flet as ft
 
 from ui.core.base_widget import BaseWidget
 from ui.core.theme import Theme
+from ui.core.widgets import PixelButton
 
 
 @dataclass(frozen=True)
@@ -16,15 +17,17 @@ class HowToSlide:
 
 
 class HowToPopup(BaseWidget):
+    WIDTH: int = Theme.CONTENT_WIDTH - 100
+
     def __init__(self, slides: list[HowToSlide], on_close: Callable[[], None]) -> None:
         super().__init__()
         self.slides = slides
         self.on_close = on_close
         self.current_index = 0
-        self._image = ft.Image(src=self.slides[0].image_path, height=200)
+        self._image = ft.Image(src=self.slides[0].image_path, height=160)
         self._text = ft.Text(
             self.slides[0].text,
-            size=16,
+            size=14,
             color=Theme.TEXT,
             text_align=ft.TextAlign.CENTER,
         )
@@ -34,7 +37,8 @@ class HowToPopup(BaseWidget):
         return ft.Container(
             bgcolor=Theme.BACKGROUND,
             border_radius=16,
-            padding=20,
+            padding=Theme.PANEL_PADDING,
+            width=self.WIDTH,
             content=ft.Column(
                 [
                     ft.Row(
@@ -45,13 +49,16 @@ class HowToPopup(BaseWidget):
                     self._text,
                     ft.Row(
                         [
-                            ft.TextButton("ก่อนหน้า", on_click=lambda _: self.prev()),
+                            ft.TextButton("Previous", on_click=lambda _: self.prev()),
                             self._counter,
-                            ft.TextButton("ถัดไป", on_click=lambda _: self.next()),
+                            ft.TextButton("Next", on_click=lambda _: self.next()),
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-                ]
+                    PixelButton("BACK", self.on_close, variant="secondary").control,
+                ],
+                tight=True,
+                spacing=Theme.SPACING,
             ),
         )
 
@@ -77,15 +84,15 @@ class HowToPopup(BaseWidget):
         return [
             HowToSlide(
                 image_path="eggs/freshman.png",
-                text="อ่านหนังสือให้ครบ 15 นาทีขึ้นไปเพื่อลุ้นไข่",
+                text="Study for at least 15 minutes to earn an egg.",
             ),
             HowToSlide(
                 image_path="eggs/senior.png",
-                text="ยิ่งอ่านนาน โอกาสได้ไข่ระดับสูงยิ่งมากขึ้น",
+                text="The longer you study, the higher the chance to get higher tier eggs.",
             ),
             HowToSlide(
                 image_path="eggs/professor.png",
-                text="ฟักไข่เพื่อลุ้นตัวละครหายาก แล้วเก็บสะสมใน CPE Dex",
+                text="Hatch eggs to collect rare characters in your CPE Dex.",
             ),
         ]
 

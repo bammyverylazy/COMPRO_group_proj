@@ -11,6 +11,19 @@ class Theme:
     ERROR: str = "#D2412F"
     FONT_FAMILY: str = "Mali"
     MOBILE_BREAKPOINT: int = 600
+    PAGE_PADDING: int = 16
+    PANEL_PADDING: int = 16
+    PANEL_RADIUS: int = 16
+    PANEL_COLOR: str = "black54"
+    SPACING: int = 12
+    TITLE_SIZE: int = 26
+    HEADING_SIZE: int = 18
+    BODY_SIZE: int = 14
+    SMALL_SIZE: int = 12
+    CLOCK_SIZE: int = 64
+    BUTTON_HEIGHT: int = 44
+    IMAGE_BUTTON_HEIGHT: int = 52
+    CONTENT_WIDTH: int = 400
 
     _RARITY_COLORS: dict[Rarity, str] = {
         Rarity.COMMON: "#8A93A6",
@@ -19,14 +32,20 @@ class Theme:
         Rarity.LEGENDARY: "#F2913A",
     }
 
+    WINDOW_WIDTH: int = 450
+    WINDOW_HEIGHT: int = 800
+
     @classmethod
     def apply(cls, page: ft.Page) -> None:
-        page.title = "CPE Egg Hatch"
+        page.title = "CPEgg Hatch"
         page.fonts = {cls.FONT_FAMILY: cls.FONT_FAMILY}
         page.theme = ft.Theme(font_family=cls.FONT_FAMILY, color_scheme_seed=cls.PRIMARY)
         page.bgcolor = cls.BACKGROUND
-        page.window.width = 420
-        page.window.height = 800
+        page.window.width = cls.WINDOW_WIDTH
+        page.window.height = cls.WINDOW_HEIGHT
+        page.window.resizable = False
+        page.padding = 0
+        page.spacing = 0
 
     @classmethod
     def is_mobile(cls, page: ft.Page) -> bool:

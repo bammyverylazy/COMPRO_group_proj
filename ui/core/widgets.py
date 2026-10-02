@@ -12,6 +12,9 @@ _VARIANT_COLORS: dict[str, str] = {
 
 
 class PixelButton(BaseWidget):
+    BORDER_WIDTH: int = 2
+    CORNER_RADIUS: int = 6
+
     def __init__(self,text: str,on_click: Callable[[], None],variant: str = "primary",disabled: bool = False,) -> None:
         super().__init__()
         self.text = text
@@ -20,11 +23,21 @@ class PixelButton(BaseWidget):
         self.disabled = disabled
 
     def build(self) -> ft.Control:
+        color = _VARIANT_COLORS.get(self.variant, Theme.PRIMARY)
         return ft.FilledButton(
-            content=ft.Text(self.text, color=ft.Colors.WHITE),
+            content=ft.Text(
+                self.text.upper(),
+                color=ft.Colors.WHITE,
+                size=Theme.BODY_SIZE,
+                weight=ft.FontWeight.BOLD,
+            ),
+            height=Theme.IMAGE_BUTTON_HEIGHT,
             disabled=self.disabled,
             style=ft.ButtonStyle(
-                bgcolor=_VARIANT_COLORS.get(self.variant, Theme.PRIMARY),
+                bgcolor=color,
+                shape=ft.RoundedRectangleBorder(radius=self.CORNER_RADIUS),
+                side=ft.BorderSide(self.BORDER_WIDTH, ft.Colors.with_opacity(0.6, ft.Colors.BLACK)),
+                padding=ft.Padding.symmetric(horizontal=Theme.SPACING, vertical=0),
             ),
             on_click=lambda _: self.on_click(),
         )
@@ -58,8 +71,8 @@ class Popup(BaseWidget):
             )
         return ft.Container(
             bgcolor=Theme.BACKGROUND,
-            border_radius=16,
-            padding=20,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
             content=ft.Column(
                 [
                     ft.Row(header_controls, alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
@@ -129,12 +142,12 @@ class StatTile(BaseWidget):
     def build(self) -> ft.Control:
         return ft.Container(
             bgcolor=Theme.BACKGROUND,
-            border_radius=12,
-            padding=16,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
             content=ft.Column(
                 [
-                    ft.Text(self.value, size=24, weight=ft.FontWeight.BOLD, color=Theme.PRIMARY),
-                    ft.Text(self.label, size=12, color=Theme.MUTED),
+                    ft.Text(self.value, size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=Theme.PRIMARY),
+                    ft.Text(self.label, size=Theme.SMALL_SIZE, color=Theme.MUTED),
                 ]
             ),
         )
