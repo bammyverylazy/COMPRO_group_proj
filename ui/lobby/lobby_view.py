@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class LobbyView(BaseView):
     route: ClassVar[str] = "/lobby"
 
-    BUTTON_HEIGHT: ClassVar[float] = 40
+    BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
     POPUP_PADDING: ClassVar[int] = 20
@@ -78,6 +78,13 @@ class LobbyView(BaseView):
             self.BUTTON_HEIGHT,
             "HOW TO",
         )
+        history_button = ImageButton(
+            "buttons/history_normal.PNG",
+            "buttons/history_hover.PNG",
+            self.open_history,
+            self.BUTTON_HEIGHT,
+            "HISTORY",
+        )
 
         return ft.Stack(
             controls=[
@@ -109,7 +116,14 @@ class LobbyView(BaseView):
                     top=0,
                 ),
                 ft.Container(
-                    content=howto_button.control,
+                    content=ft.Row(
+                        controls=[
+                            history_button.control,
+                            howto_button.control,
+                        ],
+                        spacing=4,
+                        tight=True,
+                    ),
                     top=50,
                     right=16,
                 ),
@@ -250,14 +264,6 @@ class LobbyView(BaseView):
             "GROUP STUDY",
         )
 
-        history_button = ImageButton(
-            "buttons/history_normal.PNG",
-            "buttons/history_hover.PNG",
-            self.open_history,
-            self.BUTTON_HEIGHT,
-            "HISTORY",
-        )
-
         return ft.Container(
             content=ft.Column(
                 controls=[
@@ -272,7 +278,6 @@ class LobbyView(BaseView):
                     ft.Row(
                         controls=[
                             group_button.control,
-                            history_button.control,
                         ],
                         alignment=ft.MainAxisAlignment.CENTER,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
