@@ -13,7 +13,11 @@ class SpeciesLoader:
     REQUIRED_FIELDS = ("code", "name", "tier", "rarity", "sprite_path")
 
     def __init__(self, path: Path) -> None:
-        self.path = path
+        if path.is_absolute():
+            self.path = path
+        else:
+            project_root = Path(__file__).resolve().parents[2]
+            self.path = project_root / path
 
     def load(self) -> list[Species]:
         rows = self._read_rows()

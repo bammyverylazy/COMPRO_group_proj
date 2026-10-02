@@ -9,16 +9,12 @@ from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.theme import Theme
 from ui.core.widgets import PixelButton
+from ui.lobby.image_button import ImageButton
 from ui.room.member_picker import MemberPicker
 
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
 
-# ค่าสีสำหรับสไตล์ปุ่มแบบเดียวกับ CREATE / START
-BG_NORMAL = "#E8C88A"
-BG_HOVER = "#FFE8AD"
-BORDER_COLOR = "#6D4348"
-TEXT_COLOR = "#734547"
 FONT_PIXEL = getattr(Theme, "FONT_PIXEL", "Pixel")
 
 
@@ -28,50 +24,13 @@ class RoomSetupView(BaseView):
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     TITLE: ClassVar[str] = "GROUP STUDY"
     HINT: ClassVar[str] = "Everyone studies together and shares one fate: stop before 15 minutes and nobody gets an egg."
+    BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)
         self.picker: MemberPicker | None = None
         self.subject_field: ft.TextField | None = None
         self.error_text: ft.Text | None = None
-
-    def _create_start_button(
-        self,
-        text: str = "START",
-        width: int = 120,
-    ) -> ft.Container:
-        button_text = ft.Text(
-            text,
-            color=TEXT_COLOR,
-            font_family=FONT_PIXEL,
-            size=16,
-            weight=ft.FontWeight.BOLD,
-            text_align=ft.TextAlign.CENTER,
-        )
-
-        container = ft.Container(
-            content=button_text,
-            width=width,
-            padding=10,
-            bgcolor=BG_NORMAL,
-            border=ft.Border.all(3, BORDER_COLOR),
-            border_radius=8,
-            ink=True,
-            alignment=ft.Alignment(0, 0),
-            animate=ft.Animation(100, ft.AnimationCurve.EASE_IN_OUT),
-        )
-
-        def handle_hover(e: ft.ControlEvent) -> None:
-            is_hovered = e.data == "true" or e.data is True
-            container.bgcolor = BG_HOVER if is_hovered else BG_NORMAL
-            container.update()
-
-        def handle_click(e: ft.ControlEvent) -> None:
-            self.start()
-
-        container.on_hover = handle_hover
-        container.on_click = handle_click
-        return container
 
     def build(self) -> ft.Control:
         self.picker = MemberPicker(
@@ -96,7 +55,13 @@ class RoomSetupView(BaseView):
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         
         back_button = PixelButton("BACK", self.back, variant="secondary")
-        start_button = self._create_start_button("START", width=120)
+        start_button = ImageButton(
+            "buttons/startfocus_normal.png",
+            "buttons/startfocus_hover.png",
+            self.start,
+            self.BUTTON_HEIGHT,
+            "START",
+        )
 
         panel = ft.Container(
             content=ft.Column(
@@ -107,8 +72,9 @@ class RoomSetupView(BaseView):
                     self.subject_field,
                     self.error_text,
                     ft.Row(
-                        controls=[back_button.control, start_button],
+                        controls=[back_button.control, start_button.control],
                         alignment=ft.MainAxisAlignment.END,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
                 ],
                 spacing=10,

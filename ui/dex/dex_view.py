@@ -42,7 +42,7 @@ class DexView(BaseView):
         self.detail = DexDetailPanel()
         self.completion_text = ft.Text("", color=ft.Colors.WHITE, size=Theme.BODY_SIZE)
         self.progress = ft.ProgressBar(value=0.0, color=Theme.ACCENT, bgcolor="white24", bar_height=8)
-        self.sections = ft.Column(controls=[], spacing=Theme.SPACING, tight=True)
+        self.sections = ft.Column(controls=[], spacing=Theme.SPACING, tight=True, horizontal_alignment=ft.CrossAxisAlignment.STRETCH,)
         back_button = PixelButton("BACK", self.close, variant="secondary")
 
         header = ft.Container(
@@ -139,12 +139,15 @@ class DexView(BaseView):
                                 size=Theme.HEADING_SIZE,
                                 weight=ft.FontWeight.BOLD,
                                 color=ft.Colors.WHITE,
+                                text_align=ft.TextAlign.CENTER,
                             ),
-                            ft.Row(controls=[card.control for card in tier_cards], wrap=True, spacing=8, run_spacing=8),
+                            ft.Row(controls=[card.control for card in tier_cards], wrap=True, spacing=8, run_spacing=8, alignment=ft.MainAxisAlignment.CENTER),
                         ],
                         spacing=8,
                         tight=True,
+                        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                     ),
+                    expand=True,
                     bgcolor=self.PANEL_COLOR,
                     border_radius=Theme.PANEL_RADIUS,
                     padding=Theme.PANEL_PADDING,

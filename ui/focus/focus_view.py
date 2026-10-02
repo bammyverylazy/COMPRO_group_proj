@@ -62,7 +62,13 @@ class FocusView(BaseView):
         self.bot = CpegoBot(brackets)
         self.bubble = CpegoBubble()
         self.confirm = ConfirmDialog(self.CONFIRM_TITLE, on_yes=self.confirm_stop)
-        background: ft.Image = ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, expand=True)
+
+        background: ft.Image = ft.Image(
+            src=self.BACKGROUND_PATH,
+            fit=ft.BoxFit.COVER,
+            width=float("inf"),
+            height=float("inf"),
+        )
         return ft.Stack(
             controls=[background, self._build_content(), self._build_bubble_slot()],
             expand=True,

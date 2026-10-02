@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 class LandingView(BaseView):
     route: ClassVar[str] = "/"
     requires_player: ClassVar[bool] = False
-    HOWTO_OVERLAY_COLOR: ClassVar[str] = "#80FFFFFF"
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)
@@ -118,12 +117,6 @@ class LandingView(BaseView):
         self.howto = HowToPopup(
             slides=HowToPopup.default_slides(), on_close=close_howto
         )
-        self._howto_overlay = ft.Container(
-            content=self.howto.control,
-            bgcolor=self.HOWTO_OVERLAY_COLOR,
-            alignment=ft.Alignment.CENTER,
-            padding=Theme.PAGE_PADDING,
-            expand=True,
-        )
+        self._howto_overlay = self.howto.as_overlay()
         self.ctx.page.overlay.append(self._howto_overlay)
         self.ctx.page.update()
