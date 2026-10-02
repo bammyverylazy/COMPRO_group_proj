@@ -9,6 +9,7 @@ import flet as ft
 
 from app.dto import PetDTO
 
+
 ASSETS_DIR: Path = Path(__file__).resolve().parents[2] / "assets"
 
 
@@ -67,7 +68,9 @@ class PetSprite:
         return f"{self.sprite_directory}/{filename}"
 
     def _front_path(self) -> str:
-        return self._sprite_path(f"{self.sprite_name}_front.PNG")
+        return self._sprite_path(
+            f"{self.sprite_name}_front.PNG"
+        )
 
     def _wanted_sprite_path(self) -> str:
         if not self.moving:
@@ -75,9 +78,13 @@ class PetSprite:
 
         if abs(self.target_x - self.x) >= abs(self.target_y - self.y):
             if self.facing_left:
-                return self._sprite_path(f"{self.sprite_name}_left.PNG")
+                return self._sprite_path(
+                    f"{self.sprite_name}_left.PNG"
+                )
 
-            return self._sprite_path(f"{self.sprite_name}_right.PNG")
+            return self._sprite_path(
+                f"{self.sprite_name}_right.PNG"
+            )
 
         if self.target_y < self.y:
             return self._sprite_path(
@@ -90,8 +97,10 @@ class PetSprite:
 
     def _current_sprite_path(self) -> str:
         path = self._wanted_sprite_path()
+
         if asset_exists(path):
             return path
+
         return self._front_path()
 
     def build(self) -> ft.Control:
@@ -113,11 +122,31 @@ class PetSprite:
 
         return self.container
 
-    def _floor_bounds(self, width: float, height: float) -> tuple[float, float, float, float]:
-        min_x = min(self.WALL_MARGIN, max(0, width - self.size))
-        max_x = max(min_x, width - self.size - self.WALL_MARGIN)
-        min_y = min(height * self.FLOOR_TOP_RATIO, max(0, height - self.size))
-        max_y = max(min_y, height * self.FLOOR_BOTTOM_RATIO - self.size)
+    def _floor_bounds(
+        self,
+        width: float,
+        height: float,
+    ) -> tuple[float, float, float, float]:
+        min_x = min(
+            self.WALL_MARGIN,
+            max(0, width - self.size),
+        )
+
+        max_x = max(
+            min_x,
+            width - self.size - self.WALL_MARGIN,
+        )
+
+        min_y = min(
+            height * self.FLOOR_TOP_RATIO,
+            max(0, height - self.size),
+        )
+
+        max_y = max(
+            min_y,
+            height * self.FLOOR_BOTTOM_RATIO - self.size,
+        )
+
         return min_x, max_x, min_y, max_y
 
     def choose_target(
@@ -125,7 +154,10 @@ class PetSprite:
         width: float,
         height: float,
     ) -> None:
-        min_x, max_x, min_y, max_y = self._floor_bounds(width, height)
+        min_x, max_x, min_y, max_y = self._floor_bounds(
+            width,
+            height,
+        )
 
         self.target_x = random.uniform(min_x, max_x)
         self.target_y = random.uniform(min_y, max_y)
@@ -149,15 +181,19 @@ class PetSprite:
         dx = self.target_x - self.x
         dy = self.target_y - self.y
 
-        distance = math.sqrt(dx * dx + dy * dy)
+        distance = math.sqrt(
+            dx * dx + dy * dy
+        )
 
         if distance <= self.ARRIVAL_DISTANCE:
             self.x = self.target_x
             self.y = self.target_y
+
             self.rest_sec = random.uniform(
                 self.MIN_REST_SEC,
                 self.MAX_REST_SEC,
             )
+
             self.moving = False
             self._refresh_visual()
             return
@@ -174,8 +210,13 @@ class PetSprite:
             distance,
         )
 
-        self.x += (dx / distance) * move_distance
-        self.y += (dy / distance) * move_distance
+        self.x += (
+            dx / distance
+        ) * move_distance
+
+        self.y += (
+            dy / distance
+        ) * move_distance
 
         self._refresh_visual()
 
@@ -185,4 +226,5 @@ class PetSprite:
 
         self.container.left = self.x
         self.container.top = self.y
+
         self.image.src = self._current_sprite_path()

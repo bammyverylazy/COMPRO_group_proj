@@ -8,7 +8,6 @@ from app.dto import SessionDTO
 from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.theme import Theme
-from ui.core.widgets import PixelButton
 from ui.focus.setup_popup import SetupPopup
 from ui.landing.howto_popup import HowToPopup
 from ui.lobby.image_button import ImageButton
@@ -29,7 +28,9 @@ class LobbyView(BaseView):
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
     POPUP_PADDING: ClassVar[int] = 20
     POPUP_RADIUS: ClassVar[int] = 16
-    EMPTY_TEXT: ClassVar[str] = "Your room is empty.\nPress START and study for 15 minutes to hatch your first egg!"
+    EMPTY_TEXT: ClassVar[str] = (
+        "Your room is empty.\nPress START and study for 15 minutes to hatch your first egg!"
+    )
 
     def __init__(
         self,
@@ -62,7 +63,12 @@ class LobbyView(BaseView):
             content=self.scene.control,
         )
 
-        self.status_text = ft.Text("", color=ft.Colors.WHITE, size=Theme.BODY_SIZE)
+        self.status_text = ft.Text(
+            "",
+            color=ft.Colors.WHITE,
+            size=Theme.BODY_SIZE,
+        )
+
         self.empty_hint = ft.Container(
             content=ft.Text(
                 self.EMPTY_TEXT,
@@ -91,8 +97,18 @@ class LobbyView(BaseView):
                     top=0,
                     bottom=0,
                 ),
-                ft.Container(content=self._build_top_bar(), left=0, right=0, top=0),
-                ft.Container(content=self._build_bottom_bar(), left=0, right=0, bottom=0),
+                ft.Container(
+                    content=self._build_top_bar(),
+                    left=0,
+                    right=0,
+                    top=0,
+                ),
+                ft.Container(
+                    content=self._build_bottom_bar(),
+                    left=0,
+                    right=0,
+                    bottom=0,
+                ),
             ],
             expand=True,
         )
@@ -105,6 +121,7 @@ class LobbyView(BaseView):
             if running is not None:
                 self._resume(running)
                 return
+
             pets = self.ctx.sanctuary.list_pets(player.id)
         except AppError as error:
             self.show_error(error)
@@ -159,28 +176,37 @@ class LobbyView(BaseView):
         if session.room_id is not None:
             self.ctx.nav.go("/room", room_id=session.room_id)
             return
+
         self.ctx.nav.go("/focus", session_id=session.id)
 
     def _show_status(self, nickname: str, pet_count: int) -> None:
         if self.status_text is not None:
             self.status_text.value = f"{nickname} · {pet_count} creatures"
             self.status_text.update()
+
         if self.empty_hint is not None:
             self.empty_hint.visible = pet_count == 0
             self.empty_hint.update()
 
     def _build_top_bar(self) -> ft.Control:
         switch_button = ft.TextButton(
-            content=ft.Text("SWITCH PLAYER", color=ft.Colors.WHITE),
+            content=ft.Text(
+                "SWITCH PLAYER",
+                color=ft.Colors.WHITE,
+            ),
             on_click=self._handle_switch,
         )
+
         return ft.Container(
             content=ft.Row(
                 controls=[self.status_text, switch_button],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
             bgcolor=self.PANEL_COLOR,
-            padding=ft.Padding.symmetric(horizontal=12, vertical=4),
+            padding=ft.Padding.symmetric(
+                horizontal=12,
+                vertical=4,
+            ),
         )
 
     def _build_bottom_bar(self) -> ft.Control:
@@ -191,6 +217,7 @@ class LobbyView(BaseView):
             self.BUTTON_HEIGHT,
             "START",
         )
+
         dex_button = ImageButton(
             "buttons/eggdex_normal.PNG",
             "buttons/eggdex_hover.PNG",
@@ -198,6 +225,7 @@ class LobbyView(BaseView):
             self.BUTTON_HEIGHT,
             "EGGDEX",
         )
+
         howto_button = ImageButton(
             "buttons/howto_normal.PNG",
             "buttons/howto_hover.PNG",
@@ -205,18 +233,40 @@ class LobbyView(BaseView):
             self.BUTTON_HEIGHT,
             "HOW TO",
         )
-        group_button = PixelButton("GROUP STUDY", self.start_group)
-        history_button = PixelButton("HISTORY", self.open_history, variant="secondary")
+
+        group_button = ImageButton(
+            "buttons/groupstudy_normal.PNG",
+            "buttons/groupstudy_hover.PNG",
+            self.start_group,
+            self.BUTTON_HEIGHT,
+            "GROUP STUDY",
+        )
+
+        history_button = ImageButton(
+            "buttons/history_normal.PNG",
+            "buttons/history_hover.PNG",
+            self.open_history,
+            self.BUTTON_HEIGHT,
+            "HISTORY",
+        )
+
         return ft.Container(
             content=ft.Column(
                 controls=[
                     ft.Row(
-                        controls=[start_button.control, dex_button.control],
+                        controls=[
+                            start_button.control,
+                            dex_button.control,
+                        ],
                         alignment=ft.MainAxisAlignment.CENTER,
                         wrap=True,
                     ),
                     ft.Row(
-                        controls=[howto_button.control, group_button.control, history_button.control],
+                        controls=[
+                            howto_button.control,
+                            group_button.control,
+                            history_button.control,
+                        ],
                         alignment=ft.MainAxisAlignment.CENTER,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         wrap=True,
@@ -235,12 +285,14 @@ class LobbyView(BaseView):
 
     def _open_overlay(self, content: ft.Control) -> None:
         self._close_overlay()
+
         card = ft.Container(
             content=content,
             bgcolor=Theme.BACKGROUND,
             border_radius=self.POPUP_RADIUS,
             padding=self.POPUP_PADDING,
         )
+
         self._overlay = ft.Container(
             content=card,
             bgcolor=self.OVERLAY_COLOR,
@@ -248,14 +300,17 @@ class LobbyView(BaseView):
             padding=Theme.PAGE_PADDING,
             expand=True,
         )
+
         self.ctx.page.overlay.append(self._overlay)
         self.ctx.page.update()
 
     def _close_overlay(self) -> None:
         if self._overlay is None:
             return
+
         if self._overlay in self.ctx.page.overlay:
             self.ctx.page.overlay.remove(self._overlay)
+
         self._overlay = None
         self.setup = None
         self.howto = None
