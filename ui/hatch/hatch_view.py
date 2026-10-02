@@ -15,6 +15,13 @@ from ui.hatch.hatch_animation import HatchAnimation
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
 
+# ค่าสีสำหรับสไตล์ปุ่มแบบเดียวกับ CREATE / START
+BG_NORMAL = "#E8C88A"
+BG_HOVER = "#FFE8AD"
+BORDER_COLOR = "#6D4348"
+TEXT_COLOR = "#734547"
+FONT_PIXEL = getattr(Theme, "FONT_PIXEL", "Pixel")
+
 
 class HatchView(BaseView):
     route: ClassVar[str] = "/hatch"
@@ -34,7 +41,42 @@ class HatchView(BaseView):
         self.counter_text: ft.Text | None = None
         self.slot: ft.Container | None = None
         self.skip_button: PixelButton | None = None
-        self.next_button: PixelButton | None = None
+        self.next_button: ft.Container | None = None
+        self.next_button_text: ft.Text | None = None
+
+    def _create_styled_button(self, text: str, width: int = 140) -> ft.Container:
+        self.next_button_text = ft.Text(
+            text,
+            color=TEXT_COLOR,
+            font_family=FONT_PIXEL,
+            size=14,
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.CENTER,
+        )
+
+        container = ft.Container(
+            content=self.next_button_text,
+            width=width,
+            padding=10,
+            bgcolor=BG_NORMAL,
+            border=ft.Border.all(3, BORDER_COLOR),
+            border_radius=8,
+            ink=True,
+            alignment=ft.Alignment(0, 0),
+            animate=ft.Animation(100, ft.AnimationCurve.EASE_IN_OUT),
+        )
+
+        def handle_hover(e: ft.ControlEvent) -> None:
+            is_hovered = e.data == "true" or e.data is True
+            container.bgcolor = BG_HOVER if is_hovered else BG_NORMAL
+            container.update()
+
+        def handle_click(e: ft.ControlEvent) -> None:
+            self.next()
+
+        container.on_hover = handle_hover
+        container.on_click = handle_click
+        return container
 
     def build(self) -> ft.Control:
         self.name_text = ft.Text(
@@ -52,8 +94,10 @@ class HatchView(BaseView):
             alignment=ft.Alignment.CENTER,
         )
         self.skip_button = PixelButton("SKIP", self._skip, variant="secondary")
-        self.next_button = PixelButton("NEXT", self.next)
-        self.next_button.control.visible = False
+        
+        # ปรับแต่ง next_button ให้เป็นสไตล์เดียวกับปุ่ม CREATE
+        self.next_button = self._create_styled_button("NEXT", width=140)
+        self.next_button.visible = False
 
         panel = ft.Container(
             content=ft.Column(
@@ -64,7 +108,7 @@ class HatchView(BaseView):
                     self.name_text,
                     self.detail_text,
                     ft.Row(
-                        controls=[self.skip_button.control, self.next_button.control],
+                        controls=[self.skip_button.control, self.next_button],
                         alignment=ft.MainAxisAlignment.CENTER,
                     ),
                 ],
@@ -182,9 +226,12 @@ class HatchView(BaseView):
             return
         last = self.current_index >= len(self.results) - 1
         self.skip_button.control.visible = playing
-        self.next_button.control.visible = not playing
-        self.next_button.control.content = ft.Text("SEE RESULT" if last else "NEXT", color=ft.Colors.WHITE)
-        self._safe_update(self.skip_button.control, self.next_button.control)
+        self.next_button.visible = not playing
+        
+        if self.next_button_text is not None:
+            self.next_button_text.value = "SEE RESULT" if last else "NEXT"
+            
+        self._safe_update(self.skip_button.control, self.next_button)
 
     def _safe_update(self, *controls: ft.Control) -> None:
         for control in controls:

@@ -185,8 +185,8 @@ class LobbyView(BaseView):
 
     def _build_bottom_bar(self) -> ft.Control:
         start_button = ImageButton(
-            "buttons/startfocus_normal.PNG",
-            "buttons/startfocus_hover.PNG",
+            "buttons/startfocus_normal.png",
+            "buttons/startfocus_hover.png",
             self.start_focus,
             self.BUTTON_HEIGHT,
             "START",

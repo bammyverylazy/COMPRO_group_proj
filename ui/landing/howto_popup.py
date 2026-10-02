@@ -55,7 +55,6 @@ class HowToPopup(BaseWidget):
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-                    PixelButton("BACK", self.on_close, variant="secondary").control,
                 ],
                 tight=True,
                 spacing=Theme.SPACING,

@@ -9,7 +9,7 @@ class Theme:
     TEXT: str = "#1D2333"
     MUTED: str = "#8A93A6"
     ERROR: str = "#D2412F"
-    FONT_FAMILY: str = "Mali"
+    FONT_FAMILY: str = "Pixel"
     MOBILE_BREAKPOINT: int = 600
     PAGE_PADDING: int = 16
     PANEL_PADDING: int = 16
@@ -38,7 +38,7 @@ class Theme:
     @classmethod
     def apply(cls, page: ft.Page) -> None:
         page.title = "CPEgg Hatch"
-        page.fonts = {cls.FONT_FAMILY: cls.FONT_FAMILY}
+        page.fonts = {cls.FONT_FAMILY: "fonts/PSLCD3310.ttf"}
         page.theme = ft.Theme(font_family=cls.FONT_FAMILY, color_scheme_seed=cls.PRIMARY)
         page.bgcolor = cls.BACKGROUND
         page.window.width = cls.WINDOW_WIDTH

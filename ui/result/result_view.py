@@ -8,8 +8,13 @@ from app.dto import SessionReport
 from app.errors import AppError
 from ui.core.theme import Theme
 from ui.core.base_view import BaseView
-from ui.core.widgets import PixelButton
 from ui.result.result_card import ResultCard
+
+BG_NORMAL = "#E8C88A"
+BG_HOVER = "#FFE8AD"
+BORDER_COLOR = "#6D4348"
+TEXT_COLOR = "#734547"
+FONT_PIXEL = getattr(Theme, "FONT_PIXEL", "Pixel")
 
 
 class ResultView(BaseView):
@@ -25,6 +30,44 @@ class ResultView(BaseView):
         self.reports: list[SessionReport] = []
         self.cards: list[ResultCard] = []
         self.body: ft.Column | None = None
+
+    def _create_styled_button(
+        self,
+        text: str,
+        width: int = 220,
+    ) -> ft.Container:
+        button_text = ft.Text(
+            text,
+            color=TEXT_COLOR,
+            font_family=FONT_PIXEL,
+            size=16,
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.CENTER,
+        )
+
+        container = ft.Container(
+            content=button_text,
+            width=width,
+            padding=10,
+            bgcolor=BG_NORMAL,
+            border=ft.Border.all(3, BORDER_COLOR),
+            border_radius=8,
+            ink=True,
+            alignment=ft.Alignment(0, 0),
+            animate=ft.Animation(100, ft.AnimationCurve.EASE_IN_OUT),
+        )
+
+        def handle_hover(e: ft.ControlEvent) -> None:
+            is_hovered = e.data == "true" or e.data is True
+            container.bgcolor = BG_HOVER if is_hovered else BG_NORMAL
+            container.update()
+
+        def handle_click(e: ft.ControlEvent) -> None:
+            self.return_to_lobby()
+
+        container.on_hover = handle_hover
+        container.on_click = handle_click
+        return container
 
     def build(self) -> ft.Control:
         self.body = ft.Column(
@@ -69,7 +112,7 @@ class ResultView(BaseView):
     def _content(self) -> list[ft.Control]:
         controls: list[ft.Control] = [ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)]
         controls.extend(card.control for card in self.cards)
-        controls.append(PixelButton("RETURN TO LOBBY", on_click=self.return_to_lobby).control)
+        controls.append(self._create_styled_button("RETURN TO LOBBY", width=220))
         return controls
 
     def _render(self) -> None:

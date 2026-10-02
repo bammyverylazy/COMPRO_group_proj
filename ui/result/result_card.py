@@ -20,7 +20,7 @@ class ResultCard(BaseWidget):
     }
     FAILED_EGG: ClassVar[str] = "eggs/freshman_egg.png"
     SECONDS_PER_MINUTE: ClassVar[int] = 60
-    SPRITE_SIZE: ClassVar[int] = 96
+    SPRITE_SIZE: ClassVar[int] = 300
     EGG_SIZE: ClassVar[int] = 44
     TITLE_SIZE: ClassVar[int] = Theme.TITLE_SIZE
     CARD_PADDING: ClassVar[int] = Theme.PANEL_PADDING
