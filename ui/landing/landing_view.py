@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class LandingView(BaseView):
     route: ClassVar[str] = "/"
     requires_player: ClassVar[bool] = False
-    HOWTO_OVERLAY_COLOR: ClassVar[str] = "#80FFFFFF"
+    HOWTO_OVERLAY_COLOR: ClassVar[str] = "#99000000"  # ปรับเป็นสีดำโปร่งแสง
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
         super().__init__(ctx, **params)

@@ -81,6 +81,15 @@ class LobbyView(BaseView):
             visible=False,
         )
 
+        # ปุ่ม HOW TO แบบ floating อยู่มุมขวาบน (ใต้แถบดำ)
+        howto_button = ImageButton(
+            "buttons/howto_normal.PNG",
+            "buttons/howto_hover.PNG",
+            self.open_howto,
+            self.BUTTON_HEIGHT,
+            "HOW TO",
+        )
+
         return ft.Stack(
             controls=[
                 ft.Container(
@@ -102,6 +111,12 @@ class LobbyView(BaseView):
                     left=0,
                     right=0,
                     top=0,
+                ),
+                # ปุ่ม HOW TO ลอยที่มุมขวาบน
+                ft.Container(
+                    content=howto_button.control,
+                    top=50,      # ปรับระยะห่างจากขอบบนเพื่อให้อยู่ใต้แถบดำ
+                    right=16,    # ชิดขอบขวา
                 ),
                 ft.Container(
                     content=self._build_bottom_bar(),
@@ -166,7 +181,7 @@ class LobbyView(BaseView):
             slides=HowToPopup.default_slides(),
             on_close=self._close_overlay,
         )
-        self._open_overlay(self.howto.control)
+        self._open_overlay(self.howto.build())
 
     def switch_player(self) -> None:
         self.ctx.player = None
@@ -199,7 +214,10 @@ class LobbyView(BaseView):
 
         return ft.Container(
             content=ft.Row(
-                controls=[self.status_text, switch_button],
+                controls=[
+                    self.status_text,
+                    switch_button,
+                ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
             bgcolor=self.PANEL_COLOR,
@@ -224,14 +242,6 @@ class LobbyView(BaseView):
             self.open_dex,
             self.BUTTON_HEIGHT,
             "EGGDEX",
-        )
-
-        howto_button = ImageButton(
-            "buttons/howto_normal.PNG",
-            "buttons/howto_hover.PNG",
-            self.open_howto,
-            self.BUTTON_HEIGHT,
-            "HOW TO",
         )
 
         group_button = ImageButton(
@@ -263,7 +273,6 @@ class LobbyView(BaseView):
                     ),
                     ft.Row(
                         controls=[
-                            howto_button.control,
                             group_button.control,
                             history_button.control,
                         ],

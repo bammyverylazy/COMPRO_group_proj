@@ -7,7 +7,6 @@ import flet as ft
 
 from ui.core.base_widget import BaseWidget
 from ui.core.theme import Theme
-from ui.core.widgets import PixelButton
 
 
 @dataclass(frozen=True)
@@ -94,4 +93,3 @@ class HowToPopup(BaseWidget):
                 text="Hatch eggs to collect rare characters in your CPE Dex.",
             ),
         ]
-
