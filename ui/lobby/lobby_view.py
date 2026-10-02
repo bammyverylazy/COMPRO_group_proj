@@ -52,8 +52,7 @@ class LobbyView(BaseView):
         )
 
         viewer = ft.InteractiveViewer(
-            width=self._viewport_width(),
-            height=self._viewport_height(),
+            expand=True,
             constrained=False,
             pan_enabled=True,
             scale_enabled=True,
@@ -326,18 +325,15 @@ class LobbyView(BaseView):
         self.ctx.page.update()
 
     def _viewport_width(self) -> float:
-        page_width = self.ctx.page.width or self.MAP_WIDTH
-        return min(page_width, self.MAP_WIDTH)
+        return self.ctx.page.width or self.MAP_WIDTH
 
     def _viewport_height(self) -> float:
-        page_height = self.ctx.page.height or self.MAP_HEIGHT
-        return min(page_height, self.MAP_HEIGHT)
+        return self.ctx.page.height or self.MAP_HEIGHT
 
     def _minimum_scale(self) -> float:
-        page_width = self.ctx.page.width or self.MAP_WIDTH
-        page_height = self.ctx.page.height or self.MAP_HEIGHT
+        page_width = self._viewport_width()
+        page_height = self._viewport_height()
 
-        if page_width < self.MAP_WIDTH:
-            return page_height / self.MAP_HEIGHT
-
-        return 1.0
+        scale_x = page_width / self.MAP_WIDTH
+        scale_y = page_height / self.MAP_HEIGHT
+        return max(scale_x, scale_y, 1.0)
