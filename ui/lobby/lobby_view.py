@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class LobbyView(BaseView):
     route: ClassVar[str] = "/lobby"
 
-    BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
+    BUTTON_HEIGHT: ClassVar[float] = 45
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
     POPUP_PADDING: ClassVar[int] = 20
