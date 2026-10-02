@@ -5,6 +5,7 @@ import flet as ft
 from app.config import Settings
 from app.core.clock import Clock
 from app.data.game_store import GameStore
+from app.data.save_file import MemorySaveFile, SaveFile
 from app.dto import PlayerDTO
 from app.errors import InvalidStateError
 from app.services.analytics_service import AnalyticsService
@@ -38,8 +39,13 @@ class AppContext:
         self.nav = Navigator(self)
 
     @classmethod
-    def create(cls, page: ft.Page, settings: Settings) -> AppContext:
-        store = GameStore.open(settings)
+    def create(
+        cls,
+        page: ft.Page,
+        settings: Settings,
+        save_file: SaveFile | MemorySaveFile | None = None,
+    ) -> AppContext:
+        store = GameStore.open(settings, save_file)
         return cls(page, settings, store)
 
     def require_player(self) -> PlayerDTO:

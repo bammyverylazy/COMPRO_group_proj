@@ -10,7 +10,7 @@ from app.data.repositories import (
     SessionRepository,
     SpeciesRepository,
 )
-from app.data.save_file import SaveFile
+from app.data.save_file import MemorySaveFile, SaveFile
 from app.data.species_loader import SpeciesLoader
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 
 class GameStore:
-    def __init__(self, save_file: SaveFile) -> None:
+    def __init__(self, save_file: SaveFile | MemorySaveFile) -> None:
         self.save_file = save_file
         self.players: PlayerRepository = PlayerRepository()
         self.species: SpeciesRepository = SpeciesRepository()
@@ -28,8 +28,8 @@ class GameStore:
         self.rooms: RoomRepository = RoomRepository()
 
     @classmethod
-    def open(cls, settings: Settings) -> GameStore:
-        store = cls(SaveFile(Path(settings.save_path)))
+    def open(cls, settings: Settings, save_file: SaveFile | MemorySaveFile | None = None) -> GameStore:
+        store = cls(save_file if save_file is not None else SaveFile(Path(settings.save_path)))
         for species in SpeciesLoader(Path(settings.species_seed_path)).load():
             store.species.add(species)
         store.load()

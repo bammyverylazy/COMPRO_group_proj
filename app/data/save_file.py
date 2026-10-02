@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from app.errors import AppError
 
@@ -32,3 +32,24 @@ class SaveFile:
         with temp_path.open("w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
         temp_path.replace(self.path)
+
+
+class MemorySaveFile:
+    def __init__(
+        self,
+        data: dict[str, Any] | None = None,
+        on_write: Callable[[dict[str, Any]], None] | None = None,
+    ) -> None:
+        self.data: dict[str, Any] = dict(data or {})
+        self.on_write = on_write
+
+    def exists(self) -> bool:
+        return bool(self.data)
+
+    def read(self) -> dict[str, Any]:
+        return dict(self.data)
+
+    def write(self, data: dict[str, Any]) -> None:
+        self.data = dict(data)
+        if self.on_write is not None:
+            self.on_write(self.data)
