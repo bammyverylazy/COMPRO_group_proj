@@ -35,6 +35,8 @@ class AppContext:
         self.dex = DexService(store)
         self.analytics = AnalyticsService(store, settings)
         self.sound = SoundManager(page)
+        self.sound.load("landing_lobby", "audio/landing-lobby.mp3")
+        self.sound.load("focus", "audio/focus.mp3")
         self.nav = Navigator(self)
 
     @classmethod
