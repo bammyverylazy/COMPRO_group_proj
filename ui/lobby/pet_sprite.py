@@ -18,7 +18,7 @@ def asset_exists(path: str) -> bool:
 
 
 class PetSprite:
-    BASE_SIZE: int = 96
+    BASE_SIZE: int = 200
     DEFAULT_SPEED: float = 40.0
     MIN_REST_SEC: float = 1.0
     MAX_REST_SEC: float = 3.0

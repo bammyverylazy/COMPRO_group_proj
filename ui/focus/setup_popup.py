@@ -15,6 +15,13 @@ from ui.hatch.egg_odds_panel import EggOddsPanel
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
 
+# ค่าสีสำหรับสไตล์ปุ่มแบบเดียวกับ PlayerPicker
+BG_NORMAL = "#E8C88A"
+BG_HOVER = "#FFE8AD"
+BORDER_COLOR = "#6D4348"
+TEXT_COLOR = "#734547"
+FONT_PIXEL = getattr(Theme, "FONT_PIXEL", "Pixel")
+
 
 class SetupPopup(BaseWidget):
     WIDTH: ClassVar[int] = 360
@@ -37,11 +44,52 @@ class SetupPopup(BaseWidget):
         self.error_text: ft.Text | None = None
         self.odds_panel: EggOddsPanel | None = None
 
+    def _create_start_button(
+        self,
+        text: str = "START",
+        width: int = 120,
+    ) -> ft.Container:
+        button_text = ft.Text(
+            text,
+            color=TEXT_COLOR,
+            font_family=FONT_PIXEL,
+            size=16,
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.CENTER,
+        )
+
+        container = ft.Container(
+            content=button_text,
+            width=width,
+            padding=10,
+            bgcolor=BG_NORMAL,
+            border=ft.Border.all(3, BORDER_COLOR),
+            border_radius=8,
+            ink=True,
+            alignment=ft.Alignment(0, 0),
+            animate=ft.Animation(100, ft.AnimationCurve.EASE_IN_OUT),
+        )
+
+        def handle_hover(e: ft.ControlEvent) -> None:
+            is_hovered = e.data == "true" or e.data is True
+            container.bgcolor = BG_HOVER if is_hovered else BG_NORMAL
+            container.update()
+
+        def handle_click(e: ft.ControlEvent) -> None:
+            self.start()
+
+        container.on_hover = handle_hover
+        container.on_click = handle_click
+        return container
+
     def build(self) -> ft.Control:
+        # กำหนด text_style ให้ตัวอักษรเป็นสีดำ
         self.subject_field = ft.TextField(
             label=self.FIELD_LABEL,
             autofocus=True,
             on_submit=self._on_submit,
+            text_style=ft.TextStyle(color="black", font_family=FONT_PIXEL),
+            label_style=ft.TextStyle(color="black54", font_family=FONT_PIXEL),
         )
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         self.odds_panel = EggOddsPanel(self.ctx.tiers.list_odds())
@@ -89,9 +137,9 @@ class SetupPopup(BaseWidget):
 
     def _build_actions(self) -> ft.Control:
         back_button: PixelButton = PixelButton("BACK", self.on_back, variant="secondary")
-        start_button: PixelButton = PixelButton("START", self.start)
+        start_button = self._create_start_button("START", width=120)
         return ft.Row(
-            controls=[back_button.control, start_button.control],
+            controls=[back_button.control, start_button],
             alignment=ft.MainAxisAlignment.END,
         )
 

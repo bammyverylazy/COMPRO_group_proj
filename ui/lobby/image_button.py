@@ -18,8 +18,8 @@ class ImageButton(BaseWidget):
         label: str = "",
     ) -> None:
         super().__init__()
-        self.normal_src: str = self._pick(normal_src, hover_src)
-        self.hover_src: str = self._pick(hover_src, normal_src)
+        self.normal_src: str = self._resolve_asset(normal_src)
+        self.hover_src: str = self._resolve_asset(hover_src)
         self.on_click: Callable[[], None] = on_click
         self.height: float = height
         self.label: str = label
@@ -40,17 +40,16 @@ class ImageButton(BaseWidget):
             on_hover=self._handle_hover,
         )
 
-    def _pick(self, first: str, second: str) -> str:
-        for candidate in (first, second):
-            if asset_exists(candidate):
-                return candidate
-        return ""
+    def _resolve_asset(self, path: str) -> str:
+        if asset_exists(path):
+            return path
+        return path  
 
     def _handle_click(self, event: ft.ControlEvent) -> None:
         self.on_click()
 
     def _handle_hover(self, event: ft.ControlEvent) -> None:
-        if self.image is None:
+        if self.image is None or not self.hover_src:
             return
         hovered: bool = event.data is True or event.data == "true"
         self.image.src = self.hover_src if hovered else self.normal_src
