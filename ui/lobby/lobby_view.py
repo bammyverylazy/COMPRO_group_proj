@@ -11,7 +11,6 @@ from ui.core.theme import Theme
 from ui.focus.setup_popup import SetupPopup
 from ui.landing.howto_popup import HowToPopup
 from ui.lobby.image_button import ImageButton
-from ui.lobby.sanctuary_scene import SanctuaryScene
 
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
@@ -20,9 +19,6 @@ if TYPE_CHECKING:
 class LobbyView(BaseView):
     route: ClassVar[str] = "/lobby"
 
-    MAP_WIDTH: ClassVar[float] = 1024
-    MAP_HEIGHT: ClassVar[float] = 691
-    MAX_SCALE: ClassVar[float] = 2.0
     BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
@@ -38,7 +34,6 @@ class LobbyView(BaseView):
         **params: object,
     ) -> None:
         super().__init__(ctx, **params)
-        self.scene: SanctuaryScene | None = None
         self.setup: SetupPopup | None = None
         self.howto: HowToPopup | None = None
         self.status_text: ft.Text | None = None
@@ -46,22 +41,6 @@ class LobbyView(BaseView):
         self._overlay: ft.Control | None = None
 
     def build(self) -> ft.Control:
-        self.scene = SanctuaryScene(
-            width=self.MAP_WIDTH,
-            height=self.MAP_HEIGHT,
-        )
-
-        viewer = ft.InteractiveViewer(
-            expand=True,
-            constrained=False,
-            pan_enabled=True,
-            scale_enabled=True,
-            min_scale=self._minimum_scale(),
-            max_scale=self.MAX_SCALE,
-            boundary_margin=ft.Margin.all(0),
-            content=self.scene.control,
-        )
-
         self.status_text = ft.Text(
             "",
             color=ft.Colors.WHITE,
@@ -91,11 +70,12 @@ class LobbyView(BaseView):
 
         return ft.Stack(
             controls=[
-                ft.Container(
-                    expand=True,
-                    bgcolor=ft.Colors.BLACK,
-                    alignment=ft.Alignment.CENTER,
-                    content=viewer,
+                # แสดงภาพพื้นหลังยืดเต็มหน้าจอเหมือน LandingView
+                ft.Image(
+                    src="backgrounds/landing_background.png",
+                    fit="cover",
+                    width=float("inf"),
+                    height=float("inf"),
                 ),
                 ft.Container(
                     content=self.empty_hint,
@@ -143,15 +123,7 @@ class LobbyView(BaseView):
 
         self._show_status(player.nickname, len(pets))
 
-        if self.scene is None:
-            return
-
-        self.scene.load(pets)
-        self.scene.start(self.ctx.page)
-
     def on_leave(self) -> None:
-        if self.scene is not None:
-            self.scene.stop()
         self._close_overlay()
 
     def start_focus(self) -> None:
@@ -323,17 +295,3 @@ class LobbyView(BaseView):
         self.setup = None
         self.howto = None
         self.ctx.page.update()
-
-    def _viewport_width(self) -> float:
-        return self.ctx.page.width or self.MAP_WIDTH
-
-    def _viewport_height(self) -> float:
-        return self.ctx.page.height or self.MAP_HEIGHT
-
-    def _minimum_scale(self) -> float:
-        page_width = self._viewport_width()
-        page_height = self._viewport_height()
-
-        scale_x = page_width / self.MAP_WIDTH
-        scale_y = page_height / self.MAP_HEIGHT
-        return max(scale_x, scale_y, 1.0)
