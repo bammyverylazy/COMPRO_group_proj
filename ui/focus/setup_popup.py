@@ -101,8 +101,8 @@ class SetupPopup(BaseWidget):
         back_button: PixelButton = PixelButton("BACK", self.on_back, variant="secondary")
         
         start_button = ImageButton(
-            "buttons/startfocus_normal.png",
-            "buttons/startfocus_hover.png",
+            "buttons/startfocus_normal.PNG",
+            "buttons/startfocus_hover.PNG",
             lambda: self.start(),
             self.BUTTON_HEIGHT,
             "START",
