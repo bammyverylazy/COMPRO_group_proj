@@ -8,6 +8,7 @@ from app.dto import SessionDTO
 from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.theme import Theme
+from ui.core.volume_control import VolumeControl
 from ui.focus.setup_popup import SetupPopup
 from ui.landing.howto_popup import HowToPopup
 from ui.lobby.image_button import ImageButton
@@ -27,7 +28,9 @@ class LobbyView(BaseView):
     POPUP_RADIUS: ClassVar[int] = 16
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/landing_background.png"
     TOP_BAR_HEIGHT: ClassVar[float] = 48
-    BOTTOM_BAR_HEIGHT: ClassVar[float] = 2 * BUTTON_HEIGHT + 8 + 2 * Theme.PANEL_PADDING
+    BOTTOM_BAR_HEIGHT: ClassVar[float] = (
+        2 * BUTTON_HEIGHT + 8 + 2 * Theme.PANEL_PADDING
+    )
     EMPTY_TEXT: ClassVar[str] = (
         "Your room is empty.\nPress START and study for 15 minutes to hatch your first egg!"
     )
@@ -44,6 +47,7 @@ class LobbyView(BaseView):
         self.empty_hint: ft.Container | None = None
         self._overlay: ft.Control | None = None
         self.scene: SanctuaryScene | None = None
+        self.volume_control: VolumeControl | None = None
 
     def build(self) -> ft.Control:
         width, height = self._screen_size()
@@ -53,6 +57,7 @@ class LobbyView(BaseView):
             top=self.TOP_BAR_HEIGHT,
             bottom=self.BOTTOM_BAR_HEIGHT,
         )
+
         self.status_text = ft.Text(
             "",
             color=ft.Colors.WHITE,
@@ -78,6 +83,7 @@ class LobbyView(BaseView):
             self.BUTTON_HEIGHT,
             "HOW TO",
         )
+
         history_button = ImageButton(
             "buttons/history_normal.PNG",
             "buttons/history_hover.PNG",
@@ -85,6 +91,8 @@ class LobbyView(BaseView):
             self.BUTTON_HEIGHT,
             "HISTORY",
         )
+
+        self.volume_control = VolumeControl(self.ctx.sound)
 
         return ft.Stack(
             controls=[
@@ -142,11 +150,13 @@ class LobbyView(BaseView):
 
         try:
             running = self.ctx.focus.get_running(player.id)
+
             if running is not None:
                 self._resume(running)
                 return
 
             pets = self.ctx.sanctuary.list_pets(player.id)
+
         except AppError as error:
             self.show_error(error)
             return
@@ -155,6 +165,7 @@ class LobbyView(BaseView):
 
         if self.scene is None:
             return
+
         self.scene.resize(*self._screen_size())
         self.scene.load(pets)
         self.scene.start(self.ctx.page)
@@ -163,6 +174,7 @@ class LobbyView(BaseView):
     def on_leave(self) -> None:
         if self.scene is not None:
             self.scene.stop()
+
         self.ctx.page.on_resize = None
         self._close_overlay()
 
@@ -227,9 +239,18 @@ class LobbyView(BaseView):
             content=ft.Row(
                 controls=[
                     self.status_text,
-                    switch_button,
+                    ft.Row(
+                        controls=[
+                            self.volume_control.control,
+                            switch_button,
+                        ],
+                        spacing=8,
+                        tight=True,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             height=self.TOP_BAR_HEIGHT,
             bgcolor=self.PANEL_COLOR,
