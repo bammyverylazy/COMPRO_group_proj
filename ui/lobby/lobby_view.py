@@ -20,14 +20,14 @@ if TYPE_CHECKING:
 class LobbyView(BaseView):
     route: ClassVar[str] = "/lobby"
 
-    BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
+    BUTTON_HEIGHT: ClassVar[float] = 40
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
     POPUP_PADDING: ClassVar[int] = 20
     POPUP_RADIUS: ClassVar[int] = 16
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/landing_background.png"
     TOP_BAR_HEIGHT: ClassVar[float] = 48
-    BOTTOM_BAR_HEIGHT: ClassVar[float] = 2 * Theme.IMAGE_BUTTON_HEIGHT + 8 + 2 * Theme.PANEL_PADDING
+    BOTTOM_BAR_HEIGHT: ClassVar[float] = 2 * BUTTON_HEIGHT + 8 + 2 * Theme.PANEL_PADDING
     EMPTY_TEXT: ClassVar[str] = (
         "Your room is empty.\nPress START and study for 15 minutes to hatch your first egg!"
     )
