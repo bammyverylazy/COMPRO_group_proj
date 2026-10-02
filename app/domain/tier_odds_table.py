@@ -9,36 +9,36 @@ class TierOddsTable:
                 15,
                 29,
                 {
-                    EggTier.FRESHMAN: 85,
-                    EggTier.SENIOR: 13,
-                    EggTier.PROFESSOR: 2,
+                    EggTier.FRESHMAN: 60,
+                    EggTier.SENIOR: 30,
+                    EggTier.PROFESSOR: 10,
                 },
             ),
             TierOdds(
                 30,
                 59,
                 {
-                    EggTier.FRESHMAN: 55,
-                    EggTier.SENIOR: 35,
-                    EggTier.PROFESSOR: 10,
+                    EggTier.FRESHMAN: 35,
+                    EggTier.SENIOR: 45,
+                    EggTier.PROFESSOR: 20,
                 },
             ),
             TierOdds(
                 60,
                 89,
                 {
-                    EggTier.FRESHMAN: 30,
-                    EggTier.SENIOR: 45,
-                    EggTier.PROFESSOR: 25,
+                    EggTier.FRESHMAN: 15,
+                    EggTier.SENIOR: 50,
+                    EggTier.PROFESSOR: 35,
                 },
             ),
             TierOdds(
                 90,
                 None,
                 {
-                    EggTier.FRESHMAN: 15,
-                    EggTier.SENIOR: 45,
-                    EggTier.PROFESSOR: 40,
+                    EggTier.FRESHMAN: 0,
+                    EggTier.SENIOR: 50,
+                    EggTier.PROFESSOR: 50,
                 },
             ),
         ]

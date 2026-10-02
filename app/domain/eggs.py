@@ -1,4 +1,4 @@
-﻿from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 
 from app.domain.enums import EggTier, Rarity
 from app.domain.species import Species
@@ -39,9 +39,9 @@ class FreshmanEgg(Egg):
 
     def rarity_weights(self) -> dict[Rarity, int]:
         return {
-            Rarity.COMMON: 70,
-            Rarity.RARE: 25,
-            Rarity.EPIC: 5,
+            Rarity.COMMON: 56,
+            Rarity.RARE: 28,
+            Rarity.EPIC: 16,
             Rarity.LEGENDARY: 0,
         }
 
@@ -53,10 +53,10 @@ class SeniorEgg(Egg):
 
     def rarity_weights(self) -> dict[Rarity, int]:
         return {
-            Rarity.COMMON: 40,
-            Rarity.RARE: 40,
-            Rarity.EPIC: 17,
-            Rarity.LEGENDARY: 3,
+            Rarity.COMMON: 35,
+            Rarity.RARE: 30,
+            Rarity.EPIC: 25,
+            Rarity.LEGENDARY: 10,
         }
 
 
@@ -67,8 +67,8 @@ class ProfessorEgg(Egg):
 
     def rarity_weights(self) -> dict[Rarity, int]:
         return {
-            Rarity.COMMON: 10,
+            Rarity.COMMON: 35,
             Rarity.RARE: 40,
-            Rarity.EPIC: 35,
-            Rarity.LEGENDARY: 15,
+            Rarity.EPIC: 0,
+            Rarity.LEGENDARY: 25,
         }
