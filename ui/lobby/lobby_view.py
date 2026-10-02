@@ -152,7 +152,7 @@ class LobbyView(BaseView):
             slides=HowToPopup.default_slides(),
             on_close=self._close_overlay,
         )
-        self._open_overlay(self.howto.build())
+        self._show_overlay(self.howto.as_overlay())
 
     def switch_player(self) -> None:
         self.ctx.player = None
@@ -273,14 +273,19 @@ class LobbyView(BaseView):
             padding=self.POPUP_PADDING,
         )
 
-        self._overlay = ft.Container(
-            content=card,
-            bgcolor=self.OVERLAY_COLOR,
-            alignment=ft.Alignment.CENTER,
-            padding=Theme.PAGE_PADDING,
-            expand=True,
+        self._show_overlay(
+            ft.Container(
+                content=card,
+                bgcolor=self.OVERLAY_COLOR,
+                alignment=ft.Alignment.CENTER,
+                padding=Theme.PAGE_PADDING,
+                expand=True,
+            )
         )
 
+    def _show_overlay(self, overlay: ft.Control) -> None:
+        self._close_overlay()
+        self._overlay = overlay
         self.ctx.page.overlay.append(self._overlay)
         self.ctx.page.update()
 
