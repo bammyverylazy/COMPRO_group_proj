@@ -11,6 +11,7 @@ from ui.core.theme import Theme
 from ui.focus.setup_popup import SetupPopup
 from ui.landing.howto_popup import HowToPopup
 from ui.lobby.image_button import ImageButton
+from ui.lobby.sanctuary_scene import SanctuaryScene
 
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
@@ -24,6 +25,9 @@ class LobbyView(BaseView):
     OVERLAY_COLOR: ClassVar[str] = "#99000000"
     POPUP_PADDING: ClassVar[int] = 20
     POPUP_RADIUS: ClassVar[int] = 16
+    BACKGROUND_PATH: ClassVar[str] = "backgrounds/landing_background.png"
+    TOP_BAR_HEIGHT: ClassVar[float] = 48
+    BOTTOM_BAR_HEIGHT: ClassVar[float] = 2 * Theme.IMAGE_BUTTON_HEIGHT + 8 + 2 * Theme.PANEL_PADDING
     EMPTY_TEXT: ClassVar[str] = (
         "Your room is empty.\nPress START and study for 15 minutes to hatch your first egg!"
     )
@@ -39,8 +43,16 @@ class LobbyView(BaseView):
         self.status_text: ft.Text | None = None
         self.empty_hint: ft.Container | None = None
         self._overlay: ft.Control | None = None
+        self.scene: SanctuaryScene | None = None
 
     def build(self) -> ft.Control:
+        width, height = self._screen_size()
+        self.scene = SanctuaryScene(
+            width=width,
+            height=height,
+            top=self.TOP_BAR_HEIGHT,
+            bottom=self.BOTTOM_BAR_HEIGHT,
+        )
         self.status_text = ft.Text(
             "",
             color=ft.Colors.WHITE,
@@ -59,7 +71,6 @@ class LobbyView(BaseView):
             visible=False,
         )
 
-        # ปุ่ม HOW TO แบบ floating อยู่มุมขวาบน (ใต้แถบดำ)
         howto_button = ImageButton(
             "buttons/howto_normal.PNG",
             "buttons/howto_hover.PNG",
@@ -70,12 +81,18 @@ class LobbyView(BaseView):
 
         return ft.Stack(
             controls=[
-                # แสดงภาพพื้นหลังยืดเต็มหน้าจอเหมือน LandingView
                 ft.Image(
-                    src="backgrounds/landing_background.png",
-                    fit="cover",
+                    src=self.BACKGROUND_PATH,
+                    fit=ft.BoxFit.COVER,
                     width=float("inf"),
                     height=float("inf"),
+                ),
+                ft.Container(
+                    content=self.scene.control,
+                    left=0,
+                    right=0,
+                    top=0,
+                    bottom=0,
                 ),
                 ft.Container(
                     content=self.empty_hint,
@@ -91,11 +108,10 @@ class LobbyView(BaseView):
                     right=0,
                     top=0,
                 ),
-                # ปุ่ม HOW TO ลอยที่มุมขวาบน
                 ft.Container(
                     content=howto_button.control,
-                    top=50,      # ปรับระยะห่างจากขอบบนเพื่อให้อยู่ใต้แถบดำ
-                    right=16,    # ชิดขอบขวา
+                    top=50,
+                    right=16,
                 ),
                 ft.Container(
                     content=self._build_bottom_bar(),
@@ -123,7 +139,17 @@ class LobbyView(BaseView):
 
         self._show_status(player.nickname, len(pets))
 
+        if self.scene is None:
+            return
+        self.scene.resize(*self._screen_size())
+        self.scene.load(pets)
+        self.scene.start(self.ctx.page)
+        self.ctx.page.on_resize = self._handle_resize
+
     def on_leave(self) -> None:
+        if self.scene is not None:
+            self.scene.stop()
+        self.ctx.page.on_resize = None
         self._close_overlay()
 
     def start_focus(self) -> None:
@@ -191,6 +217,7 @@ class LobbyView(BaseView):
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
+            height=self.TOP_BAR_HEIGHT,
             bgcolor=self.PANEL_COLOR,
             padding=ft.Padding.symmetric(
                 horizontal=12,
@@ -256,6 +283,7 @@ class LobbyView(BaseView):
                 spacing=8,
                 tight=True,
             ),
+            height=self.BOTTOM_BAR_HEIGHT,
             bgcolor=self.PANEL_COLOR,
             padding=Theme.PANEL_PADDING,
         )
@@ -300,3 +328,12 @@ class LobbyView(BaseView):
         self.setup = None
         self.howto = None
         self.ctx.page.update()
+
+    def _screen_size(self) -> tuple[float, float]:
+        width = self.ctx.page.width or Theme.WINDOW_WIDTH
+        height = self.ctx.page.height or Theme.WINDOW_HEIGHT
+        return float(width), float(height)
+
+    def _handle_resize(self, event: ft.ControlEvent) -> None:
+        if self.scene is not None:
+            self.scene.resize(*self._screen_size())
