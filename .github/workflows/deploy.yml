@@ -1,7 +1,6 @@
-```yaml
 name: Web Build + Deploy to GitHub Pages
 
-on:
+'on':
   push:
     branches:
       - main
@@ -9,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 env:
@@ -73,4 +72,3 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           artifact_name: web-build-artifact
-```
