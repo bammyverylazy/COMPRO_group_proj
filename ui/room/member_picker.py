@@ -7,6 +7,7 @@ import flet as ft
 from app.dto import PlayerDTO
 from app.errors import AppError
 from ui.core.base_widget import BaseWidget
+from ui.core.sound_manager import SoundManager
 from ui.core.theme import Theme
 from ui.core.widgets import PixelButton
 
@@ -21,11 +22,13 @@ class MemberPicker(BaseWidget):
         players: list[PlayerDTO],
         on_create: Callable[[str], PlayerDTO],
         max_members: int,
+        sound: SoundManager,
     ) -> None:
         super().__init__()
         self.players: list[PlayerDTO] = list(players)
         self.on_create: Callable[[str], PlayerDTO] = on_create
         self.max_members: int = max_members
+        self.sound = sound
         self.selected_ids: set[int] = set()
         self.nickname_field: ft.TextField | None = None
         self._list: ft.Column | None = None
@@ -47,7 +50,9 @@ class MemberPicker(BaseWidget):
             focused_border_color=Theme.ACCENT,
         )
         self._error_text = ft.Text("", color=Theme.ERROR, visible=False)
-        add_button = PixelButton("ADD", self.add_player, variant="secondary")
+        add_button = PixelButton(
+            "ADD", self.add_player, variant="secondary", sound=self.sound
+        )
         self._sync_count()
         return ft.Column(
             controls=[

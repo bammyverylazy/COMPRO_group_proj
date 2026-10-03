@@ -82,6 +82,7 @@ class LobbyView(BaseView):
             self.open_howto,
             self.BUTTON_HEIGHT,
             "HOW TO",
+            sound=self.ctx.sound,
         )
 
         history_button = ImageButton(
@@ -90,6 +91,7 @@ class LobbyView(BaseView):
             self.open_history,
             self.BUTTON_HEIGHT,
             "HISTORY",
+            sound=self.ctx.sound,
         )
 
         self.volume_control = VolumeControl(self.ctx.sound)
@@ -203,6 +205,7 @@ class LobbyView(BaseView):
         self.howto = HowToPopup(
             slides=HowToPopup.default_slides(),
             on_close=self._close_overlay,
+            sound=self.ctx.sound,
         )
         self._show_overlay(self.howto.as_overlay())
 
@@ -234,6 +237,7 @@ class LobbyView(BaseView):
             ),
             on_click=self._handle_switch,
         )
+        self.ctx.sound.bind_button(switch_button)
 
         return ft.Container(
             content=ft.Row(
@@ -267,6 +271,7 @@ class LobbyView(BaseView):
             self.start_focus,
             self.BUTTON_HEIGHT,
             "START",
+            sound=self.ctx.sound,
         )
 
         dex_button = ImageButton(
@@ -275,6 +280,7 @@ class LobbyView(BaseView):
             self.open_dex,
             self.BUTTON_HEIGHT,
             "EGGDEX",
+            sound=self.ctx.sound,
         )
 
         group_button = ImageButton(
@@ -283,6 +289,7 @@ class LobbyView(BaseView):
             self.start_group,
             self.BUTTON_HEIGHT,
             "GROUP STUDY",
+            sound=self.ctx.sound,
         )
 
         return ft.Container(

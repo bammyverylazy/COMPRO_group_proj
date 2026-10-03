@@ -37,6 +37,7 @@ class RoomSetupView(BaseView):
             players=self.ctx.players.list_players(),
             on_create=self._create_player,
             max_members=self.ctx.settings.max_room_members,
+            sound=self.ctx.sound,
         )
         player = self.ctx.player
         if player is not None:
@@ -54,13 +55,16 @@ class RoomSetupView(BaseView):
         )
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         
-        back_button = PixelButton("BACK", self.back, variant="secondary")
+        back_button = PixelButton(
+            "BACK", self.back, variant="secondary", sound=self.ctx.sound
+        )
         start_button = ImageButton(
             "buttons/startfocus_normal.png",
             "buttons/startfocus_hover.png",
             self.start,
             self.BUTTON_HEIGHT,
             "START",
+            sound=self.ctx.sound,
         )
 
         panel = ft.Container(

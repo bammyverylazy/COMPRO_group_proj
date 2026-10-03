@@ -43,7 +43,9 @@ class DexView(BaseView):
         self.completion_text = ft.Text("", color=ft.Colors.WHITE, size=Theme.BODY_SIZE)
         self.progress = ft.ProgressBar(value=0.0, color=Theme.ACCENT, bgcolor="white24", bar_height=8)
         self.sections = ft.Column(controls=[], spacing=Theme.SPACING, tight=True, horizontal_alignment=ft.CrossAxisAlignment.STRETCH,)
-        back_button = PixelButton("BACK", self.close, variant="secondary")
+        back_button = PixelButton(
+            "BACK", self.close, variant="secondary", sound=self.ctx.sound
+        )
 
         header = ft.Container(
             content=ft.Column(
@@ -127,7 +129,10 @@ class DexView(BaseView):
             tier_entries = [entry for entry in self.entries if entry.species.tier is tier]
             if not tier_entries:
                 continue
-            tier_cards = [DexCard(entry, self.select) for entry in tier_entries]
+            tier_cards = [
+                DexCard(entry, self.select, sound=self.ctx.sound)
+                for entry in tier_entries
+            ]
             self.cards.extend(tier_cards)
             unlocked = sum(1 for entry in tier_entries if entry.unlocked)
             controls.append(

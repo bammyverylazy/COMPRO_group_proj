@@ -11,6 +11,7 @@ from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.format import Format
 from ui.core.theme import Theme
+from ui.core.volume_control import VolumeControl
 from ui.core.widgets import ConfirmDialog, PixelButton
 from ui.focus.cpego_bot import CpegoBot, CpegoMessage
 from ui.focus.cpego_bubble import CpegoBubble
@@ -47,6 +48,7 @@ class FocusView(BaseView):
         self.bot: CpegoBot | None = None
         self.bubble: CpegoBubble | None = None
         self.confirm: ConfirmDialog | None = None
+        self.volume_control: VolumeControl | None = None
 
     def build(self) -> ft.Control:
         brackets: list[TierOdds] = self.ctx.tiers.list_odds()
@@ -61,7 +63,12 @@ class FocusView(BaseView):
         self.odds_panel = EggOddsPanel(brackets, text_color=ft.Colors.WHITE)
         self.bot = CpegoBot(brackets)
         self.bubble = CpegoBubble()
-        self.confirm = ConfirmDialog(self.CONFIRM_TITLE, on_yes=self.confirm_stop)
+        self.confirm = ConfirmDialog(
+            self.CONFIRM_TITLE,
+            on_yes=self.confirm_stop,
+            sound=self.ctx.sound,
+        )
+        self.volume_control = VolumeControl(self.ctx.sound)
 
         background: ft.Image = ft.Image(
             src=self.BACKGROUND_PATH,
@@ -70,7 +77,12 @@ class FocusView(BaseView):
             height=float("inf"),
         )
         return ft.Stack(
-            controls=[background, self._build_content(), self._build_bubble_slot()],
+            controls=[
+                background,
+                self._build_content(),
+                self._build_bubble_slot(),
+                self._build_volume_bar(),
+            ],
             expand=True,
         )
 
@@ -114,7 +126,9 @@ class FocusView(BaseView):
         self.ctx.nav.go(route, session_id=result.session_id)
 
     def _build_content(self) -> ft.Control:
-        stop_button: PixelButton = PixelButton("STOP", self.ask_stop, variant="danger")
+        stop_button: PixelButton = PixelButton(
+            "STOP", self.ask_stop, variant="danger", sound=self.ctx.sound
+        )
         panel = ft.Container(
             content=ft.Column(
                 controls=[
@@ -148,6 +162,21 @@ class FocusView(BaseView):
             content=self.bubble.control,
             right=self.BUBBLE_MARGIN,
             bottom=self.BUBBLE_MARGIN,
+        )
+
+    def _build_volume_bar(self) -> ft.Control:
+        return ft.Container(
+            content=ft.Row(
+                controls=[self.volume_control.control],
+                alignment=ft.MainAxisAlignment.END,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            height=48,
+            bgcolor=Theme.PANEL_COLOR,
+            padding=ft.Padding.symmetric(horizontal=12, vertical=4),
+            left=0,
+            right=0,
+            top=0,
         )
 
     def _load_session(self) -> SessionDTO | None:

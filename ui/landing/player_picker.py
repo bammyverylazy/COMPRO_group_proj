@@ -5,6 +5,7 @@ from typing import Callable
 import flet as ft
 from app.dto import PlayerDTO
 from ui.core.base_widget import BaseWidget
+from ui.core.sound_manager import SoundManager
 from ui.core.theme import Theme
 
 MAX_NICKNAME_LENGTH = 20
@@ -23,11 +24,13 @@ class PlayerPicker(BaseWidget):
         players: list[PlayerDTO],
         on_pick: Callable[[PlayerDTO], None],
         on_create: Callable[[str], None],
+        sound: SoundManager,
     ) -> None:
         super().__init__()
         self.players = players
         self.on_pick = on_pick
         self.on_create = on_create
+        self.sound = sound
         self.nickname_field: ft.TextField | None = None
         self.error_text: ft.Text | None = None
 
@@ -68,6 +71,7 @@ class PlayerPicker(BaseWidget):
 
         container.on_hover = handle_hover
         container.on_click = handle_click
+        self.sound.bind_button(container)
         return container
 
     def build(self) -> ft.Control:
@@ -129,6 +133,7 @@ class PlayerPicker(BaseWidget):
                 return _on_hover
 
             p_container.on_hover = make_hover(p_container)
+            self.sound.bind_button(p_container)
             player_rows.append(p_container)
 
         create_button = self._create_hoverable_button(

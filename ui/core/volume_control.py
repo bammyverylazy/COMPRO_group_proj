@@ -38,6 +38,8 @@ class VolumeControl:
             ),
             on_click=self._increase,
         )
+        self.sound.bind_button(self.minus_button)
+        self.sound.bind_button(self.plus_button)
 
         for _ in range(10):
             self._bars.append(

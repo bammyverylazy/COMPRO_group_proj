@@ -1,7 +1,9 @@
 from __future__ import annotations
 from typing import Callable
 import flet as ft
+
 from ui.core.base_widget import BaseWidget
+from ui.core.sound_manager import SoundManager
 from ui.core.theme import Theme
 
 _VARIANT_COLORS: dict[str, str] = {
@@ -15,16 +17,24 @@ class PixelButton(BaseWidget):
     BORDER_WIDTH: int = 2
     CORNER_RADIUS: int = 6
 
-    def __init__(self,text: str,on_click: Callable[[], None],variant: str = "primary",disabled: bool = False,) -> None:
+    def __init__(
+        self,
+        text: str,
+        on_click: Callable[[], None],
+        variant: str = "primary",
+        disabled: bool = False,
+        sound: SoundManager | None = None,
+    ) -> None:
         super().__init__()
         self.text = text
         self.on_click = on_click
         self.variant = variant
         self.disabled = disabled
+        self.sound = sound
 
     def build(self) -> ft.Control:
         color = _VARIANT_COLORS.get(self.variant, Theme.PRIMARY)
-        return ft.FilledButton(
+        button = ft.FilledButton(
             content=ft.Text(
                 self.text.upper(),
                 color=ft.Colors.WHITE,
@@ -41,6 +51,9 @@ class PixelButton(BaseWidget):
             ),
             on_click=lambda _: self.on_click(),
         )
+        if self.sound is not None:
+            self.sound.bind_button(button)
+        return button
 
     def set_disabled(self, disabled: bool) -> None:
         self.disabled = disabled
@@ -99,10 +112,12 @@ class ConfirmDialog:
         title: str,
         on_yes: Callable[[], None],
         on_no: Callable[[], None] | None = None,
+        sound: SoundManager | None = None,
     ) -> None:
         self.title = title
         self.on_yes = on_yes
         self.on_no = on_no
+        self.sound = sound
         self._dialog: ft.AlertDialog | None = None
 
     def open(self, page: ft.Page) -> None:
@@ -123,6 +138,9 @@ class ConfirmDialog:
                 ft.TextButton(content=ft.Text("YES"), on_click=handle_yes),
             ],
         )
+        if self.sound is not None:
+            for button in self._dialog.actions:
+                self.sound.bind_button(button)
         page.overlay.append(self._dialog)
         self._dialog.open = True
         page.update()
@@ -151,4 +169,3 @@ class StatTile(BaseWidget):
                 ]
             ),
         )
-

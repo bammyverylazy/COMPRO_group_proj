@@ -11,6 +11,9 @@ except ImportError:
 
 
 class SoundManager:
+    CLICK_EFFECT = "click"
+    HOVER_EFFECT = "hover"
+
     def __init__(self, page: ft.Page, muted: bool = False) -> None:
         self.page = page
         self.muted = muted
@@ -38,6 +41,48 @@ class SoundManager:
             self._last_played = name
 
         self.page.update()
+
+    def load_effect(self, name: str, path: str) -> None:
+        if fta is None:
+            return
+
+        audio = fta.Audio(
+            src=path,
+            volume=self._get_volume(),
+            release_mode=fta.ReleaseMode.STOP,
+        )
+        self.page.services.append(audio)
+        self._sounds[name] = audio
+        self.page.update()
+
+    def play_effect(self, name: str) -> None:
+        if self.muted or self.volume_level == 0 or fta is None:
+            return
+
+        audio = self._sounds.get(name)
+        if audio is None:
+            raise ValueError(f"Sound effect '{name}' is not loaded.")
+
+        self.page.run_task(audio.play)
+
+    def bind_button(self, control: ft.Control) -> ft.Control:
+        on_click = control.on_click
+        on_hover = control.on_hover
+
+        def handle_click(event: ft.ControlEvent) -> None:
+            self.play_effect(self.CLICK_EFFECT)
+            if on_click is not None:
+                on_click(event)
+
+        def handle_hover(event: ft.ControlEvent) -> None:
+            if event.data is True or event.data == "true":
+                self.play_effect(self.HOVER_EFFECT)
+            if on_hover is not None:
+                on_hover(event)
+
+        control.on_click = handle_click
+        control.on_hover = handle_hover
+        return control
 
     def play(self, name: str) -> None:
         if self.muted or self.volume_level == 0:

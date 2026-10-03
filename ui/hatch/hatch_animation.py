@@ -34,11 +34,22 @@ class HatchAnimation(BaseWidget):
     SHAKE_MS: ClassVar[int] = 70
     TADA_TEXT: ClassVar[str] = "TADA!"
 
-    def __init__(self, tier: EggTier, pet: PetDTO, stage_ms: int = 900) -> None:
+    def __init__(
+        self,
+        tier: EggTier,
+        pet: PetDTO,
+        stage_ms: int = 900,
+        on_egg_swap: Callable[[], None] | None = None,
+        on_hatch: Callable[[], None] | None = None,
+        on_reveal: Callable[[], None] | None = None,
+    ) -> None:
         super().__init__()
         self.tier: EggTier = tier
         self.pet: PetDTO = pet
         self.stage_ms: int = stage_ms
+        self.on_egg_swap = on_egg_swap
+        self.on_hatch = on_hatch
+        self.on_reveal = on_reveal
         self.current_stage: int = 0
         self.stack: ft.Stack | None = None
         self._egg_image: ft.Image | None = None
@@ -48,6 +59,7 @@ class HatchAnimation(BaseWidget):
         self._tada: ft.Text | None = None
         self._on_done: Callable[[], None] | None = None
         self._finished: bool = False
+        self._revealed: bool = False
 
     def build(self) -> ft.Control:
         self._egg_image = ft.Image(
@@ -111,6 +123,7 @@ class HatchAnimation(BaseWidget):
     def play(self, page: ft.Page, on_done: Callable[[], None]) -> None:
         self._on_done = on_done
         self._finished = False
+        self._revealed = False
         self.current_stage = 0
         page.run_task(self._run)
 
@@ -147,6 +160,8 @@ class HatchAnimation(BaseWidget):
             if self._finished:
                 return
             self._egg_image.src = self.EGG_IMAGES[self.TIER_ORDER[step % len(self.TIER_ORDER)]]
+            if self.on_egg_swap is not None:
+                self.on_egg_swap()
             self._update()
             await asyncio.sleep(self.ROULETTE_START_SEC + step * self.ROULETTE_GROWTH_SEC)
         self._egg_image.src = self.EGG_IMAGES[self.tier]
@@ -168,6 +183,8 @@ class HatchAnimation(BaseWidget):
     async def _crack(self) -> None:
         if self._egg is None or self._flash is None:
             return
+        if self.on_hatch is not None:
+            self.on_hatch()
         self._egg.scale = 1.3
         self._egg.opacity = 0.0
         self._flash.opacity = 0.9
@@ -179,6 +196,9 @@ class HatchAnimation(BaseWidget):
     def _show_final(self) -> None:
         if self._egg is None or self._pet is None or self._tada is None or self._flash is None:
             return
+        if not self._revealed and self.on_reveal is not None:
+            self.on_reveal()
+        self._revealed = True
         self._egg.opacity = 0.0
         self._egg.rotate = 0.0
         self._flash.opacity = 0.0

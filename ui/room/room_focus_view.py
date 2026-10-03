@@ -52,8 +52,14 @@ class RoomFocusView(BaseView):
         self.odds_panel = EggOddsPanel(brackets, text_color=ft.Colors.WHITE)
         self.bot = CpegoBot(brackets)
         self.bubble = CpegoBubble()
-        self.confirm = ConfirmDialog(self.CONFIRM_TITLE, on_yes=self.confirm_stop)
-        stop_button = PixelButton("STOP", self.ask_stop, variant="danger")
+        self.confirm = ConfirmDialog(
+            self.CONFIRM_TITLE,
+            on_yes=self.confirm_stop,
+            sound=self.ctx.sound,
+        )
+        stop_button = PixelButton(
+            "STOP", self.ask_stop, variant="danger", sound=self.ctx.sound
+        )
 
         panel = ft.Container(
             content=ft.Column(

@@ -28,7 +28,6 @@ class HatchView(BaseView):
     BACKGROUND_PATH: ClassVar[str] = "backgrounds/hatch_background.png"
     PANEL_COLOR: ClassVar[str] = Theme.PANEL_COLOR
     TITLE: ClassVar[str] = "HATCHING..."
-    TADA_SOUND: ClassVar[str] = "tada"
     WAITING_TEXT: ClassVar[str] = "Hatching..."
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
@@ -76,7 +75,7 @@ class HatchView(BaseView):
 
         container.on_hover = handle_hover
         container.on_click = handle_click
-        return container
+        return self.ctx.sound.bind_button(container)
 
     def build(self) -> ft.Control:
         self.name_text = ft.Text(
@@ -93,7 +92,9 @@ class HatchView(BaseView):
             height=HatchAnimation.AREA_SIZE,
             alignment=ft.Alignment.CENTER,
         )
-        self.skip_button = PixelButton("SKIP", self._skip, variant="secondary")
+        self.skip_button = PixelButton(
+            "SKIP", self._skip, variant="secondary", sound=self.ctx.sound
+        )
         
         # ปรับแต่ง next_button ให้เป็นสไตล์เดียวกับปุ่ม CREATE
         self.next_button = self._create_styled_button("NEXT", width=140)
@@ -161,12 +162,17 @@ class HatchView(BaseView):
         if self.slot is None or self.current_index >= len(self.results):
             return
         result = self.results[self.current_index]
-        self.animation = HatchAnimation(result.tier, result.pet)
+        self.animation = HatchAnimation(
+            result.tier,
+            result.pet,
+            on_egg_swap=lambda: self.ctx.sound.play_effect("spinningbeat"),
+            on_hatch=lambda: self.ctx.sound.play_effect("hatch"),
+            on_reveal=lambda: self.ctx.sound.play_effect("result"),
+        )
         self.slot.content = self.animation.control
         self._set_texts(result, revealed=False)
         self._set_buttons(playing=True)
         self.slot.update()
-        self.ctx.sound.play(self.TADA_SOUND)
         self.animation.play(self.ctx.page, self._on_animation_done)
 
     def next(self) -> None:
