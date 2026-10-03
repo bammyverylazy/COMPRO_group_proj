@@ -11,6 +11,7 @@ from app.errors import AppError
 from ui.core.theme import Theme
 from ui.core.base_view import BaseView
 from ui.core.format import Format
+from ui.core.volume_control import VolumeControl
 from ui.core.widgets import ConfirmDialog, PixelButton
 from ui.focus.cpego_bot import CpegoBot, CpegoMessage
 from ui.focus.cpego_bubble import CpegoBubble
@@ -43,6 +44,7 @@ class RoomFocusView(BaseView):
         self.confirm: ConfirmDialog | None = None
         self.subject_text: ft.Text | None = None
         self.members_slot: ft.Container | None = None
+        self.volume_control: VolumeControl | None = None
 
     def build(self) -> ft.Control:
         brackets: list[TierOdds] = self.ctx.tiers.list_odds()
@@ -57,6 +59,7 @@ class RoomFocusView(BaseView):
             on_yes=self.confirm_stop,
             sound=self.ctx.sound,
         )
+        self.volume_control = VolumeControl(self.ctx.sound)
         stop_button = PixelButton(
             "STOP", self.ask_stop, variant="danger", sound=self.ctx.sound
         )
@@ -86,6 +89,7 @@ class RoomFocusView(BaseView):
                 ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, width=float("inf"), height=float("inf")),
                 ft.Container(content=panel, alignment=ft.Alignment.CENTER, padding=Theme.PAGE_PADDING, left=0, right=0, top=0, bottom=0),
                 ft.Container(content=self.bubble.control, right=16, bottom=16),
+                self._build_volume_bar(),
             ],
             expand=True,
         )
@@ -154,6 +158,13 @@ class RoomFocusView(BaseView):
 
     def _started_at(self, room: RoomDTO) -> datetime:
         return datetime.fromisoformat(room.started_at)
+
+    def _build_volume_bar(self) -> ft.Control:
+        return ft.Container(
+            content=self.volume_control.control,
+            right=16,
+            top=18,
+        )
 
     def _announce(self, elapsed_sec: int) -> None:
         if self.bot is None or self.bubble is None:

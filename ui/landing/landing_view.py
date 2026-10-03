@@ -86,11 +86,8 @@ class LandingView(BaseView):
                 ),
                 ft.Container(
                     content=self.volume_control.control,
-                    height=48,
-                    bgcolor=Theme.PANEL_COLOR,
-                    padding=ft.Padding.symmetric(horizontal=12, vertical=4),
-                    right=0,
-                    top=0,
+                    right=8,
+                    top=4,
                 ),
             ],
             expand=True,

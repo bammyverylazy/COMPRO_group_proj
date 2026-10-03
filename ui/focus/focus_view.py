@@ -166,17 +166,9 @@ class FocusView(BaseView):
 
     def _build_volume_bar(self) -> ft.Control:
         return ft.Container(
-            content=ft.Row(
-                controls=[self.volume_control.control],
-                alignment=ft.MainAxisAlignment.END,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            height=48,
-            bgcolor=Theme.PANEL_COLOR,
-            padding=ft.Padding.symmetric(horizontal=12, vertical=4),
-            left=0,
-            right=0,
-            top=0,
+            content=self.volume_control.control,
+            right=16,
+            top=18,
         )
 
     def _load_session(self) -> SessionDTO | None:
