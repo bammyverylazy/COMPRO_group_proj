@@ -24,18 +24,7 @@ def asset_exists(path: str) -> bool:
 
 
 class PetSprite:
-    """สไปรต์สัตว์เลี้ยง ออกแบบให้ "วาร์ปน้อยที่สุดในกรณีเลวร้ายที่สุด"
-
-    หลักการ
-    1. ความคืบหน้าของเที่ยวเดินสะสมจากเวลาที่ผ่านไปต่อ tick แต่จำกัดไม่เกิน MAX_STEP_SEC
-       ถ้าลูปสะดุด ตัวละครจะเดินช้าลง ไม่กระโดดตามเวลาที่หายไป
-    2. ส่งตำแหน่งให้ UI ทุก tick และมองล่วงหน้าแค่ LEAD_SEC (สั้นมาก)
-       ถ้า animate_position ทำงาน จะเนียนเต็มเฟรมเรตของจอ
-       ถ้าไม่ทำงาน ก็ขยับทีละไม่เกิน speed * MAX_STEP_SEC (ราว 2 px)
-    3. ถ้า widget ถูกสร้างใหม่ ตัวละครกระโดดได้ไม่เกิน speed * LEAD_SEC (ราว 2 px)
-    """
-
-    BASE_SIZE: int = 220
+    BASE_SIZE: int = 170
     DEFAULT_SPEED: float = 40.0
     MIN_REST_SEC: float = 1.0
     MAX_REST_SEC: float = 3.0
@@ -46,11 +35,8 @@ class PetSprite:
     PATH_STEP: float = 8.0
     TARGET_TRIES: int = 40
 
-    # ตำแหน่งที่ส่งให้ UI คือตำแหน่งของอีก LEAD_SEC ข้างหน้า (ใช้เป็นระยะเวลา animation ด้วย)
     LEAD_SEC: float = 0.05
-    # เวลาที่นับเป็นความคืบหน้าได้สูงสุดต่อ tick
     MAX_STEP_SEC: float = 0.05
-    # เผื่อเวลาให้ client เดินถึงที่หมายก่อนสลับเป็นภาพยืน
     ARRIVE_GRACE: float = 0.08
 
     HEADING_SIDE: str = "side"
@@ -73,7 +59,6 @@ class PetSprite:
         self.target_x = x
         self.target_y = y
 
-        # ข้อมูลของเที่ยวปัจจุบัน
         self.start_x = x
         self.start_y = y
         self.trip_elapsed = 0.0
@@ -81,7 +66,6 @@ class PetSprite:
 
         now = time.monotonic()
         self.last_update = now
-        # เริ่มพักแบบสุ่ม เพื่อไม่ให้ทุกตัวออกเดินพร้อมกัน
         self.rest_until = now + random.uniform(0.0, self.MAX_REST_SEC)
 
         self.facing_left = False
@@ -92,13 +76,11 @@ class PetSprite:
         self.moving = False
         self._last_src: str = ""
 
-        # ใช้ออบเจ็กต์เดิมซ้ำ เพื่อไม่ให้ส่งค่า animation ซ้ำทุกครั้ง
         self._anim_move = ft.Animation(
             duration=int(self.LEAD_SEC * 1000), curve=ft.AnimationCurve.LINEAR
         )
         self._anim_snap = ft.Animation(duration=1, curve=ft.AnimationCurve.LINEAR)
 
-    # ------------------------------------------------------------------ props
     @property
     def size(self) -> float:
         return self.BASE_SIZE * self.pet.scale
@@ -117,7 +99,6 @@ class PetSprite:
     def feet_y(self) -> float:
         return self.y + (self.size * self.FOOT_RATIO)
 
-    # ----------------------------------------------------------------- assets
     def _sprite_path(self, filename: str) -> str:
         return f"{self.sprite_directory}/{filename}"
 
@@ -162,7 +143,6 @@ class PetSprite:
 
         return self._front_path()
 
-    # ------------------------------------------------------------------ build
     def build(self) -> ft.Control:
         sprite_path = self._current_sprite_path()
         self._last_src = sprite_path
@@ -175,8 +155,6 @@ class PetSprite:
             gapless_playback=True,
         )
 
-        # ต้องมี animate_position ตั้งแต่ตอนสร้าง (แม้แค่ 1 ms)
-        # ไม่งั้น Flutter จะสร้าง widget ใหม่ตอนเปิด animation แล้วตัวละครจะวาร์ป
         self.container = ft.Container(
             content=self.image,
             left=self.x,
@@ -187,7 +165,6 @@ class PetSprite:
 
         return self.container
 
-    # ---------------------------------------------------------------- geometry
     def _bounds(self, area: Rect) -> Rect:
         left, top, right, bottom = area
         min_x = left - self.size * self.SIDE_RATIO
@@ -232,21 +209,25 @@ class PetSprite:
         self.target_x = self.x
         self.target_y = self.y
 
-    # --------------------------------------------------------------- lifecycle
     def place(self, area: Rect, obstacles: list[Rect]) -> None:
         self.choose_target(area, obstacles, check_path=False)
         self.x = self.target_x
         self.y = self.target_y
 
+    def move_feet_to(self, feet_x: float, feet_y: float) -> None:
+        self.x = feet_x - self.size / 2
+        self.y = feet_y - self.size * self.FOOT_RATIO
+
     def keep_inside(self, area: Rect, obstacles: list[Rect]) -> None:
-        """เรียกเมื่อพื้นที่เปลี่ยน: ยกเลิกเที่ยวเดิมแล้ววางตัวละครในขอบเขตใหม่"""
         min_x, max_x, min_y, max_y = self._bounds(area)
         self.moving = False
         self.x = min(max(self.x, min_x), max_x)
         self.y = min(max(self.y, min_y), max_y)
+        if self._blocked(self.x, self.y, obstacles):
+            self.place(area, obstacles)
         self.target_x = self.x
         self.target_y = self.y
-        self.rest_until = 0.0  # ออกเดินเที่ยวใหม่ได้ทันทีใน tick ถัดไป
+        self.rest_until = 0.0
         self.last_update = time.monotonic()
         self._push_snap()
 
@@ -269,8 +250,6 @@ class PetSprite:
         )
 
     def update(self, now: float, area: Rect, obstacles: list[Rect]) -> bool:
-        """อัปเดตสถานะตรรกะ คืน True เมื่อมีอะไรต้องส่งไปยัง UI"""
-        # ความคืบหน้าต่อ tick ถูกจำกัดไว้ ลูปสะดุดแล้วตัวละครเดินช้าลง ไม่กระโดด
         dt = min(max(now - self.last_update, 0.0), self.MAX_STEP_SEC)
         self.last_update = now
 
@@ -278,7 +257,6 @@ class PetSprite:
             self.trip_elapsed += dt
 
             if self.trip_elapsed >= self.trip_duration + self.ARRIVE_GRACE:
-                # ถึงที่หมายแล้ว
                 self.x = self.target_x
                 self.y = self.target_y
                 self.moving = False
@@ -297,7 +275,6 @@ class PetSprite:
         return self._start_trip(now, area, obstacles)
 
     def _push_position(self) -> bool:
-        """ส่งตำแหน่งของอีก LEAD_SEC ข้างหน้า (สั้นมาก) ให้ client เลื่อนไปหา"""
         if self.container is None:
             return False
         ahead_x, ahead_y = self._position_at(self.trip_elapsed + self.LEAD_SEC)
@@ -327,7 +304,6 @@ class PetSprite:
         if self.container is None or self.image is None:
             return False
 
-        # เปลี่ยนเป็นภาพเดินและส่งตำแหน่งแรกพร้อมกันในครั้งเดียว
         self._push_src()
         return self._push_position()
 
@@ -342,7 +318,6 @@ class PetSprite:
         return True
 
     def _push_snap(self) -> None:
-        """วางตัวละครที่ตำแหน่ง x, y ทันทีโดยไม่เล่น animation"""
         if self.container is None or self.image is None:
             return
         self.container.animate_position = self._anim_snap
