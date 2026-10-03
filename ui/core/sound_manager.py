@@ -20,7 +20,8 @@ class SoundManager:
         self._sounds: dict[str, Any] = {}
         self._current: str | None = None
         self._last_played: str | None = None
-        self.volume_level: int = 10
+
+        self.volume_level: int = 3
 
     def load(self, name: str, path: str) -> None:
         if fta is None:
@@ -51,6 +52,7 @@ class SoundManager:
             volume=self._get_volume(),
             release_mode=fta.ReleaseMode.STOP,
         )
+
         self.page.services.append(audio)
         self._sounds[name] = audio
         self.page.update()
@@ -60,6 +62,7 @@ class SoundManager:
             return
 
         audio = self._sounds.get(name)
+
         if audio is None:
             raise ValueError(f"Sound effect '{name}' is not loaded.")
 
@@ -71,32 +74,39 @@ class SoundManager:
 
         def handle_click(event: ft.ControlEvent) -> None:
             self.play_effect(self.CLICK_EFFECT)
+
             if on_click is not None:
                 on_click(event)
 
         def handle_hover(event: ft.ControlEvent) -> None:
             if event.data is True or event.data == "true":
                 self.play_effect(self.HOVER_EFFECT)
+
             if on_hover is not None:
                 on_hover(event)
 
         control.on_click = handle_click
         control.on_hover = handle_hover
+
         return control
 
     def play(self, name: str) -> None:
         if self.muted or self.volume_level == 0:
             return
 
+        audio = self._sounds.get(name)
+
         if self._current == name:
+            if audio is not None:
+                self.page.run_task(audio.play)
+
             return
 
         if self._current is not None:
             current_audio = self._sounds.get(self._current)
+
             if current_audio is not None:
                 self.page.run_task(current_audio.pause)
-
-        audio = self._sounds.get(name)
 
         if audio is not None:
             self.page.run_task(audio.play)
@@ -158,6 +168,7 @@ class SoundManager:
         if self.muted:
             self._apply_volume()
             self.stop()
+
         else:
             if self.volume_level == 0:
                 self.volume_level = 10
