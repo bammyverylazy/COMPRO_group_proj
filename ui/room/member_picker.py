@@ -48,6 +48,7 @@ class MemberPicker(BaseWidget):
             cursor_color=ft.Colors.WHITE,
             border_color=ft.Colors.WHITE_70,
             focused_border_color=Theme.ACCENT,
+            counter_style=ft.TextStyle(color=ft.Colors.WHITE_70),
         )
         self._error_text = ft.Text("", color=Theme.ERROR, visible=False)
         add_button = PixelButton(
@@ -99,6 +100,9 @@ class MemberPicker(BaseWidget):
                 value=player.id in self.selected_ids,
                 on_change=lambda event, player_id=player.id: self.toggle(player_id),
                 label_style=ft.TextStyle(color=ft.Colors.WHITE),
+                active_color=ft.Colors.WHITE,
+                check_color=Theme.TEXT,
+                hover_color=ft.Colors.WHITE_70,
             )
             for player in self.players
         ]

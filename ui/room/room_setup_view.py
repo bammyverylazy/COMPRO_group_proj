@@ -43,13 +43,12 @@ class RoomSetupView(BaseView):
         if player is not None:
             self.picker.selected_ids.add(player.id)
             
-        # ปรับแต่งตัวอักษรในช่องกรอกเป็นสีดำให้ชัดเจน
         self.subject_field = ft.TextField(
             label="Subject",
             on_submit=self._handle_submit,
-            color=ft.Colors.BLACK,
-            label_style=ft.TextStyle(color=ft.Colors.BLACK_54, font_family=FONT_PIXEL),
-            cursor_color=ft.Colors.BLACK,
+            color=ft.Colors.WHITE,
+            label_style=ft.TextStyle(color=ft.Colors.WHITE_70, font_family=FONT_PIXEL),
+            cursor_color=ft.Colors.WHITE,
             border_color=ft.Colors.WHITE_70,
             focused_border_color=Theme.ACCENT,
         )

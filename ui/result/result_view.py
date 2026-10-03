@@ -112,10 +112,35 @@ class ResultView(BaseView):
         return []
 
     def _content(self) -> list[ft.Control]:
-        controls: list[ft.Control] = [ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)]
+        controls: list[ft.Control] = [self._build_title()]
         controls.extend(card.control for card in self.cards)
         controls.append(self._create_styled_button("RETURN TO LOBBY", width=220))
         return controls
+
+    def _build_title(self) -> ft.Control:
+        return ft.Stack(
+            controls=[
+                ft.Text(
+                    self.TITLE,
+                    size=self.TITLE_SIZE,
+                    weight=ft.FontWeight.BOLD,
+                    style=ft.TextStyle(
+                        foreground=ft.Paint(
+                            color=BORDER_COLOR,
+                            style=ft.PaintingStyle.STROKE,
+                            stroke_width=4,
+                        )
+                    ),
+                ),
+                ft.Text(
+                    self.TITLE,
+                    size=self.TITLE_SIZE,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.WHITE,
+                ),
+            ],
+            alignment=ft.Alignment.CENTER,
+        )
 
     def _render(self) -> None:
         if self.body is None:
