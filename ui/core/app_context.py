@@ -36,6 +36,14 @@ class AppContext:
         self.dex = DexService(store)
         self.analytics = AnalyticsService(store, settings)
         self.sound = SoundManager(page)
+        self.sound.load("landing_lobby", "audio/landing-lobby.mp3")
+        self.sound.load("focus", "audio/focus.mp3")
+        self.sound.load_effect("click", "audio/click.mp3")
+        self.sound.load_effect("hover", "audio/hover.mp3")
+        self.sound.load_effect("spinningbeat", "audio/spinningbeat.mp3")
+        self.sound.load_effect("hatch", "audio/hatch.mp3")
+        self.sound.load_effect("result", "audio/result.mp3")
+        self.sound.load_effect("fail", "audio/fail.mp3")
         self.nav = Navigator(self)
 
     @classmethod

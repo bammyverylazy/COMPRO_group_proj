@@ -10,12 +10,12 @@ if TYPE_CHECKING:
 
 
 class Navigator():
-    def __init__(self,ctx: AppContext) -> None:
+    def __init__(self, ctx: AppContext) -> None:
         self.ctx = ctx
         self.routes: dict[str, type[BaseView]] = {}
         self.current: BaseView | None = None
 
-    def register(self,view_cls: type[BaseView]) -> None:
+    def register(self, view_cls: type[BaseView]) -> None:
         self.routes[view_cls.route] = view_cls
 
     def start(self) -> None:
@@ -24,19 +24,28 @@ class Navigator():
 
     def go(self, route: str, **params: Any) -> None:
         view_cls = self.routes.get(route)
+
         if view_cls is None:
             raise InvalidStateError(f"Route '{route}' is not registered.")
+
         if self.current is not None:
             self.current.on_leave()
+
         if view_cls.requires_player and self.ctx.player is None:
             view_cls = self.routes["/"]
             params = {}
+
         view = view_cls(self.ctx, **params)
         self.current = view
         self.ctx.page.views.clear()
         self.ctx.page.views.append(view.to_view())
         self.ctx.page.update()
         view.on_enter()
+
+        if route in ("/", "/lobby"):
+            self.ctx.sound.play("landing_lobby")
+        elif route == "/focus":
+            self.ctx.sound.play("focus")
 
     def _register_all_routes(self) -> None:
         from ui.dex.dex_view import DexView
@@ -60,5 +69,6 @@ class Navigator():
             DexView,
             HistoryView,
         )
+
         for view_cls in view_classes:
             self.register(view_cls)

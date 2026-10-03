@@ -87,13 +87,14 @@ class HistoryView(BaseView):
             spacing=8,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
-        return ft.Container(
+        row_container = ft.Container(
             content=row,
             bgcolor=self.PANEL_COLOR,
             padding=ft.Padding.symmetric(horizontal=10, vertical=6),
             border_radius=10,
             on_click=lambda event, session_id=report.session_id: self.open_report(session_id),
         )
+        return self.ctx.sound.bind_button(row_container)
 
     def open_report(self, session_id: int) -> None:
         self.ctx.nav.go("/result", session_id=session_id)
@@ -105,7 +106,12 @@ class HistoryView(BaseView):
         header = ft.Row(
             controls=[
                 ft.Text(self.TITLE, size=self.TITLE_SIZE, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                PixelButton("BACK", on_click=self.close, variant="secondary").control,
+                PixelButton(
+                    "BACK",
+                    on_click=self.close,
+                    variant="secondary",
+                    sound=self.ctx.sound,
+                ).control,
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )

@@ -6,6 +6,7 @@ from typing import Callable
 import flet as ft
 
 from ui.core.base_widget import BaseWidget
+from ui.core.sound_manager import SoundManager
 from ui.core.theme import Theme
 
 
@@ -25,10 +26,16 @@ class HowToPopup(BaseWidget):
     BORDER_WIDTH: int = 3
     OVERLAY_COLOR: str = ft.Colors.with_opacity(0.6, ft.Colors.BLACK)
     
-    def __init__(self, slides: list[HowToSlide], on_close: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        slides: list[HowToSlide],
+        on_close: Callable[[], None],
+        sound: SoundManager,
+    ) -> None:
         super().__init__()
         self.slides = slides
         self.on_close = on_close
+        self.sound = sound
         self.current_index = 0
         self._image = ft.Image(
             src=self.slides[0].image_path,
@@ -53,12 +60,22 @@ class HowToPopup(BaseWidget):
             border_radius=8,
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
         )
+        close_button = ft.IconButton(
+            icon=ft.Icons.CLOSE,
+            icon_color=self.TITLE_COLOR,
+            on_click=lambda _: self.on_close(),
+        )
+        previous_button = ft.TextButton("Previous", on_click=lambda _: self.prev())
+        next_button = ft.TextButton("Next", on_click=lambda _: self.next())
+        for button in (close_button, previous_button, next_button):
+            self.sound.bind_button(button)
+
         return ft.Column(
             [
                 ft.Row(
                     [
                         ft.Text("HOW TO PLAY", size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=self.TITLE_COLOR),
-                        ft.IconButton(icon=ft.Icons.CLOSE, icon_color=self.TITLE_COLOR, on_click=lambda _: self.on_close()),
+                        close_button,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
@@ -66,9 +83,9 @@ class HowToPopup(BaseWidget):
                 self._text,
                 ft.Row(
                     [
-                        ft.TextButton("Previous", on_click=lambda _: self.prev()),
+                        previous_button,
                         self._counter,
-                        ft.TextButton("Next", on_click=lambda _: self.next()),
+                        next_button,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),

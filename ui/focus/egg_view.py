@@ -95,7 +95,15 @@ class EggView(BaseWidget):
 
     def _bar_segments(self) -> list[ft.Control]:
         if not self.odds:
-            return [ft.Text(self.EMPTY_TEXT, size=self.BAR_TEXT_SIZE, color=ft.Colors.WHITE)]
+            return [
+                ft.Text(
+                    self.EMPTY_TEXT,
+                    size=self.BAR_TEXT_SIZE,
+                    color=ft.Colors.WHITE,
+                    text_align=ft.TextAlign.CENTER,
+                    expand=True,
+                )
+            ]
         return [self._segment(tier) for tier in self.TIER_ORDER if self.odds.get(tier, 0) > 0]
 
     def _segment(self, tier: EggTier) -> ft.Control:

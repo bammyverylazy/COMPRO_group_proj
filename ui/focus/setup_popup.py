@@ -84,7 +84,12 @@ class SetupPopup(BaseWidget):
             return []
         label: ft.Text = ft.Text(self.RECENT_LABEL, size=self.SECTION_SIZE, color=Theme.MUTED)
         buttons: list[ft.Control] = [
-            PixelButton(subject, partial(self._fill_subject, subject), variant="secondary").control
+            PixelButton(
+                subject,
+                partial(self._fill_subject, subject),
+                variant="secondary",
+                sound=self.ctx.sound,
+            ).control
             for subject in subjects
         ]
         return [label, ft.Row(controls=buttons, wrap=True)]
@@ -98,7 +103,9 @@ class SetupPopup(BaseWidget):
             return []
 
     def _build_actions(self) -> ft.Control:
-        back_button: PixelButton = PixelButton("BACK", self.on_back, variant="secondary")
+        back_button: PixelButton = PixelButton(
+            "BACK", self.on_back, variant="secondary", sound=self.ctx.sound
+        )
         
         start_button = ImageButton(
             "buttons/startfocus_normal.PNG",
@@ -106,6 +113,7 @@ class SetupPopup(BaseWidget):
             lambda: self.start(),
             self.BUTTON_HEIGHT,
             "START",
+            sound=self.ctx.sound,
         )
 
         return ft.Row(

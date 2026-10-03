@@ -6,6 +6,7 @@ import flet as ft
 
 from app.dto import DexEntry
 from ui.core.base_widget import BaseWidget
+from ui.core.sound_manager import SoundManager
 from ui.core.theme import Theme
 
 
@@ -24,11 +25,13 @@ class DexCard(BaseWidget):
         entry: DexEntry,
         on_select: Callable[[DexEntry], None],
         selected: bool = False,
+        sound: SoundManager | None = None,
     ) -> None:
         super().__init__()
         self.entry: DexEntry = entry
         self.on_select: Callable[[DexEntry], None] = on_select
         self.selected: bool = selected
+        self.sound = sound
         self._card: ft.Container | None = None
 
     def build(self) -> ft.Control:
@@ -60,6 +63,8 @@ class DexCard(BaseWidget):
             border=self._border(),
             on_click=self._handle_click,
         )
+        if self.sound is not None:
+            self.sound.bind_button(self._card)
         return self._card
 
     def set_selected(self, selected: bool) -> None:

@@ -7,6 +7,7 @@ from app.dto import PlayerDTO
 from app.errors import ValidationError
 from ui.core.base_view import BaseView
 from ui.core.theme import Theme
+from ui.core.volume_control import VolumeControl
 from ui.landing.howto_popup import HowToPopup
 from ui.landing.player_picker import PlayerPicker
 
@@ -23,6 +24,7 @@ class LandingView(BaseView):
         self.picker: PlayerPicker | None = None
         self.howto: HowToPopup | None = None
         self._howto_overlay: ft.Control | None = None
+        self.volume_control: VolumeControl | None = None
         self._howto_img = ft.Image(
             src="buttons/howto_normal.PNG",
             height=50,
@@ -35,7 +37,9 @@ class LandingView(BaseView):
             players=players,
             on_pick=self.pick_player,
             on_create=self.create_player,
+            sound=self.ctx.sound,
         )
+        self.volume_control = VolumeControl(self.ctx.sound)
 
         howto_button = ft.Container(
             content=self._howto_img,
@@ -45,6 +49,7 @@ class LandingView(BaseView):
             border_radius=8,
             alignment=ft.Alignment(0, 0),
         )
+        self.ctx.sound.bind_button(howto_button)
 
         picker_card = ft.Container(
             content=self.picker.control,
@@ -78,6 +83,11 @@ class LandingView(BaseView):
                         alignment=ft.MainAxisAlignment.CENTER,
                         spacing=Theme.SPACING,
                     ),
+                ),
+                ft.Container(
+                    content=self.volume_control.control,
+                    right=8,
+                    top=4,
                 ),
             ],
             expand=True,
@@ -115,7 +125,9 @@ class LandingView(BaseView):
             self._howto_overlay = None
 
         self.howto = HowToPopup(
-            slides=HowToPopup.default_slides(), on_close=close_howto
+            slides=HowToPopup.default_slides(),
+            on_close=close_howto,
+            sound=self.ctx.sound,
         )
         self._howto_overlay = self.howto.as_overlay()
         self.ctx.page.overlay.append(self._howto_overlay)

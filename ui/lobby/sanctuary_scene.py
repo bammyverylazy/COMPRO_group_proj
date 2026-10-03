@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 
 import flet as ft
 
@@ -20,6 +21,16 @@ class SanctuaryScene(BaseWidget):
         (0.888, 0.456, 1.0, 0.665),
     )
 
+    MIN_FPS: int = 30
+
+    REORDER_MARGIN: float = 8.0
+
+    REORDER_INTERVAL: float = 0.5
+
+    ENABLE_REORDER: bool = True
+
+    AUTO_MEASURE: bool = True
+
     def __init__(
         self,
         width: float,
@@ -33,22 +44,59 @@ class SanctuaryScene(BaseWidget):
         self.height = height
         self.top = top
         self.bottom = bottom
-        self.fps = fps
+        self.fps = max(fps, self.MIN_FPS)
         self.sprites: list[PetSprite] = []
         self.running = False
         self.stack: ft.Stack | None = None
+        self._last_reorder = 0.0
 
     def build(self) -> ft.Control:
         self.stack = ft.Stack(controls=self._layers(), expand=True)
-        return self.stack
+        if not self.AUTO_MEASURE:
+            return self.stack
+        try:
+            return ft.Container(
+                content=self.stack,
+                expand=True,
+                on_size_change=self._on_size_change,
+            )
+        except TypeError:
+            return self.stack
+
+    def _on_size_change(self, e) -> None:
+        try:
+            width = float(getattr(e, "width", None))
+            height = float(getattr(e, "height", None))
+        except (TypeError, ValueError):
+            return
+        if width <= 0 or height <= 0:
+            return
+        try:
+            self.resize(width, height)
+        except RuntimeError:
+            pass
 
     def resize(self, width: float, height: float) -> None:
+        if abs(width - self.width) < 0.5 and abs(height - self.height) < 0.5:
+            return
+
+        old_width, old_height = self.width, self.height
+        fractions = [
+            self._to_fraction(
+                sprite.x + sprite.size / 2, sprite.feet_y, old_width, old_height
+            )
+            for sprite in self.sprites
+        ]
+
         self.width = width
         self.height = height
         area = self._area()
         obstacles = self._obstacles()
-        for sprite in self.sprites:
+        for sprite, (fx, fy) in zip(self.sprites, fractions):
+            screen_x, screen_y = self._to_screen(fx, fy)
+            sprite.move_feet_to(screen_x, screen_y)
             sprite.keep_inside(area, obstacles)
+        self.refresh()
 
     def load(self, pets: list[PetDTO]) -> None:
         self.sprites = []
@@ -58,6 +106,9 @@ class SanctuaryScene(BaseWidget):
             sprite = PetSprite(pet=pet, x=0, y=0)
             sprite.place(area, obstacles)
             self.sprites.append(sprite)
+
+        self.sprites.sort(key=lambda s: s.feet_y)
+
         if self.stack is not None:
             self.stack.controls = self._layers()
             self.refresh()
@@ -72,23 +123,56 @@ class SanctuaryScene(BaseWidget):
         self.running = False
 
     async def _loop(self) -> None:
-        dt = 1.0 / self.fps
+        interval = 1.0 / self.fps
+        next_at = time.perf_counter()
         while self.running:
             try:
-                self.tick(dt)
+                self.tick()
             except RuntimeError:
                 self.running = False
                 return
-            await asyncio.sleep(dt)
+            next_at += interval
+            delay = next_at - time.perf_counter()
+            if delay < 0:
+                next_at = time.perf_counter()
+                delay = 0.0
+            await asyncio.sleep(delay)
 
-    def tick(self, dt: float) -> None:
+    def tick(self, dt: float | None = None) -> None:
         if self.stack is None:
             return
+
+        now = time.monotonic()
         area = self._area()
         obstacles = self._obstacles()
+
+        dirty = False
         for sprite in self.sprites:
-            sprite.update(dt, area, obstacles)
-        self.refresh()
+            if sprite.update(now, area, obstacles):
+                dirty = True
+
+        if self.ENABLE_REORDER and now - self._last_reorder >= self.REORDER_INTERVAL:
+            self._last_reorder = now
+            if self._resort():
+                self.stack.controls = [
+                    s.container for s in self.sprites if s.container is not None
+                ]
+                dirty = True
+
+        if dirty:
+            self.refresh()
+
+    def _resort(self) -> bool:
+        changed = False
+        sprites = self.sprites
+        margin = self.REORDER_MARGIN
+        for i in range(1, len(sprites)):
+            j = i
+            while j > 0 and sprites[j - 1].feet_y > sprites[j].feet_y + margin:
+                sprites[j - 1], sprites[j] = sprites[j], sprites[j - 1]
+                j -= 1
+                changed = True
+        return changed
 
     def _area(self) -> tuple[float, float, float, float]:
         floor_bottom = max(self.top, self.height - self.bottom)
@@ -106,13 +190,23 @@ class SanctuaryScene(BaseWidget):
             rects.append((x1, y1, x2, y2))
         return rects
 
-    def _to_screen(self, fx: float, fy: float) -> tuple[float, float]:
-        scale = max(self.width / self.BACKGROUND_WIDTH, self.height / self.BACKGROUND_HEIGHT)
+    def _layout(self, width: float, height: float) -> tuple[float, float, float, float]:
+        scale = max(width / self.BACKGROUND_WIDTH, height / self.BACKGROUND_HEIGHT)
         shown_width = self.BACKGROUND_WIDTH * scale
         shown_height = self.BACKGROUND_HEIGHT * scale
-        offset_x = (self.width - shown_width) / 2
-        offset_y = (self.height - shown_height) / 2
+        offset_x = (width - shown_width) / 2
+        offset_y = (height - shown_height) / 2
+        return offset_x, offset_y, shown_width, shown_height
+
+    def _to_screen(self, fx: float, fy: float) -> tuple[float, float]:
+        offset_x, offset_y, shown_width, shown_height = self._layout(self.width, self.height)
         return offset_x + fx * shown_width, offset_y + fy * shown_height
+
+    def _to_fraction(
+        self, sx: float, sy: float, width: float, height: float
+    ) -> tuple[float, float]:
+        offset_x, offset_y, shown_width, shown_height = self._layout(width, height)
+        return (sx - offset_x) / shown_width, (sy - offset_y) / shown_height
 
     def _layers(self) -> list[ft.Control]:
         return [sprite.build() for sprite in self.sprites]
