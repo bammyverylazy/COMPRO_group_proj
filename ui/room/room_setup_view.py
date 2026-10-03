@@ -58,8 +58,8 @@ class RoomSetupView(BaseView):
             "BACK", self.back, variant="secondary", sound=self.ctx.sound
         )
         start_button = ImageButton(
-            "buttons/startfocus_normal.png",
-            "buttons/startfocus_hover.png",
+            "buttons/startfocus_normal.PNG",
+            "buttons/startfocus_hover.PNG",
             self.start,
             self.BUTTON_HEIGHT,
             "START",
