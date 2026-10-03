@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 
 import flet as ft
 
@@ -20,6 +21,19 @@ class SanctuaryScene(BaseWidget):
         (0.888, 0.456, 1.0, 0.665),
     )
 
+    # อัตรา tick ขั้นต่ำ: ยิ่งถี่ ก้าวของตัวละครยิ่งเล็ก (30 fps ที่ speed 40 = ราว 1.3 px ต่อก้าว)
+    MIN_FPS: int = 30
+
+    # ตัวละครต้องแซงกันเกินระยะนี้ (px) ถึงจะสลับลำดับชั้นการวาด
+    REORDER_MARGIN: float = 8.0
+
+    # ตรวจและสลับลำดับชั้นการวาดไม่เกินทุก ๆ กี่วินาที
+    # (การแทนที่ stack.controls อาจทำให้ widget ถูกสร้างใหม่ จึงไม่ทำถี่)
+    REORDER_INTERVAL: float = 0.5
+
+    # ปิดเป็น False เพื่อทดสอบว่าการสลับลำดับเป็นต้นเหตุของการกระโดดหรือไม่
+    ENABLE_REORDER: bool = True
+
     def __init__(
         self,
         width: float,
@@ -33,10 +47,11 @@ class SanctuaryScene(BaseWidget):
         self.height = height
         self.top = top
         self.bottom = bottom
-        self.fps = fps
+        self.fps = max(fps, self.MIN_FPS)
         self.sprites: list[PetSprite] = []
         self.running = False
         self.stack: ft.Stack | None = None
+        self._last_reorder = 0.0
 
     def build(self) -> ft.Control:
         self.stack = ft.Stack(controls=self._layers(), expand=True)
@@ -49,6 +64,7 @@ class SanctuaryScene(BaseWidget):
         obstacles = self._obstacles()
         for sprite in self.sprites:
             sprite.keep_inside(area, obstacles)
+        self.refresh()
 
     def load(self, pets: list[PetDTO]) -> None:
         self.sprites = []
@@ -58,6 +74,10 @@ class SanctuaryScene(BaseWidget):
             sprite = PetSprite(pet=pet, x=0, y=0)
             sprite.place(area, obstacles)
             self.sprites.append(sprite)
+
+        # เรียงลำดับเริ่มต้นตามเท้าครั้งเดียว
+        self.sprites.sort(key=lambda s: s.feet_y)
+
         if self.stack is not None:
             self.stack.controls = self._layers()
             self.refresh()
@@ -72,23 +92,61 @@ class SanctuaryScene(BaseWidget):
         self.running = False
 
     async def _loop(self) -> None:
-        dt = 1.0 / self.fps
+        # กำหนดเวลา tick แบบไม่สะสมความคลาดเคลื่อน
+        # (ถ้า tick ใช้เวลานาน รอบถัดไปจะชดเชยโดยไม่ sleep เพิ่ม)
+        interval = 1.0 / self.fps
+        next_at = time.perf_counter()
         while self.running:
             try:
-                self.tick(dt)
+                self.tick()
             except RuntimeError:
                 self.running = False
                 return
-            await asyncio.sleep(dt)
+            next_at += interval
+            delay = next_at - time.perf_counter()
+            if delay < 0:
+                # ช้ากว่ากำหนด: ไม่ไล่ชดเชยหลายรอบติดกัน
+                next_at = time.perf_counter()
+                delay = 0.0
+            await asyncio.sleep(delay)
 
-    def tick(self, dt: float) -> None:
+    def tick(self, dt: float | None = None) -> None:
+        """dt ไม่ได้ใช้แล้ว (เก็บพารามิเตอร์ไว้เพื่อให้โค้ดเดิมที่เรียก tick(dt) ยังทำงานได้)"""
         if self.stack is None:
             return
+
+        now = time.monotonic()
         area = self._area()
         obstacles = self._obstacles()
+
+        dirty = False
         for sprite in self.sprites:
-            sprite.update(dt, area, obstacles)
-        self.refresh()
+            if sprite.update(now, area, obstacles):
+                dirty = True
+
+        if self.ENABLE_REORDER and now - self._last_reorder >= self.REORDER_INTERVAL:
+            self._last_reorder = now
+            if self._resort():
+                self.stack.controls = [
+                    s.container for s in self.sprites if s.container is not None
+                ]
+                dirty = True
+
+        if dirty:
+            self.refresh()
+
+    def _resort(self) -> bool:
+        """Insertion sort แบบมี margin คืน True ถ้าลำดับเปลี่ยน"""
+        changed = False
+        sprites = self.sprites
+        margin = self.REORDER_MARGIN
+        for i in range(1, len(sprites)):
+            j = i
+            while j > 0 and sprites[j - 1].feet_y > sprites[j].feet_y + margin:
+                sprites[j - 1], sprites[j] = sprites[j], sprites[j - 1]
+                j -= 1
+                changed = True
+        return changed
 
     def _area(self) -> tuple[float, float, float, float]:
         floor_bottom = max(self.top, self.height - self.bottom)
