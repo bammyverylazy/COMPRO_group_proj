@@ -8,86 +8,66 @@ from ui.core.sound_manager import SoundManager
 class VolumeControl:
     def __init__(self, sound: SoundManager) -> None:
         self.sound = sound
+        self.expanded = False
 
-        self._bars: list[ft.Container] = []
+        self.icon_button = ft.IconButton(
+            icon=self._get_icon(),
+            icon_color=ft.Colors.WHITE,
+            icon_size=22,
+            tooltip="Volume",
+            on_click=self._toggle,
+        )
+        self.sound.bind_button(self.icon_button)
 
-        self.minus_button = ft.TextButton(
-            content=ft.Text(
-                "−",
-                size=20,
-                weight=ft.FontWeight.BOLD,
-                color=ft.Colors.WHITE,
+        self.slider = ft.Slider(
+            min=0,
+            max=10,
+            divisions=10,
+            value=self.sound.volume_level,
+            width=100,
+            active_color=ft.Colors.WHITE,
+            inactive_color=ft.Colors.with_opacity(
+                0.3,
+                ft.Colors.WHITE,
             ),
-            style=ft.ButtonStyle(
-                color=ft.Colors.WHITE,
-                bgcolor=ft.Colors.TRANSPARENT,
-            ),
-            on_click=self._decrease,
+            thumb_color=ft.Colors.WHITE,
+            on_change=self._change_volume,
         )
 
-        self.plus_button = ft.TextButton(
-            content=ft.Text(
-                "+",
-                size=20,
-                weight=ft.FontWeight.BOLD,
-                color=ft.Colors.WHITE,
-            ),
-            style=ft.ButtonStyle(
-                color=ft.Colors.WHITE,
-                bgcolor=ft.Colors.TRANSPARENT,
-            ),
-            on_click=self._increase,
-        )
-        self.sound.bind_button(self.minus_button)
-        self.sound.bind_button(self.plus_button)
+        self.slider.visible = False
 
-        for _ in range(10):
-            self._bars.append(
-                ft.Container(
-                    width=8,
-                    height=14,
-                    bgcolor=ft.Colors.WHITE,
-                    border_radius=2,
-                )
-            )
-
-        self.control = ft.Container(
-            content=ft.Row(
-                controls=[
-                    self.minus_button,
-                    ft.Row(
-                        controls=self._bars,
-                        spacing=2,
-                        tight=True,
-                    ),
-                    self.plus_button,
-                ],
-                spacing=4,
-                tight=True,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=4,
+        self.control = ft.Row(
+            controls=[
+                self.icon_button,
+                self.slider,
+            ],
+            spacing=2,
+            tight=True,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-    def _decrease(self, event: ft.ControlEvent) -> None:
-        self.sound.decrease_volume()
-        self._update_bars()
-
-    def _increase(self, event: ft.ControlEvent) -> None:
-        self.sound.increase_volume()
-        self._update_bars()
-
-    def _update_bars(self) -> None:
-        level = self.sound.volume_level
-
-        for index, bar in enumerate(self._bars):
-            bar.bgcolor = (
-                ft.Colors.WHITE
-                if index < level
-                else ft.Colors.with_opacity(
-                    0.25,
-                    ft.Colors.WHITE,
-                )
-            )
-
+    def _toggle(self, event: ft.ControlEvent) -> None:
+        self.expanded = not self.expanded
+        self.slider.visible = self.expanded
         self.control.update()
+
+    def _change_volume(self, event: ft.ControlEvent) -> None:
+        level = int(event.control.value)
+
+        while self.sound.volume_level < level:
+            self.sound.increase_volume()
+
+        while self.sound.volume_level > level:
+            self.sound.decrease_volume()
+
+        self.icon_button.icon = self._get_icon()
+        self.icon_button.update()
+
+    def _get_icon(self) -> str:
+        if self.sound.volume_level == 0:
+            return ft.Icons.VOLUME_OFF
+
+        if self.sound.volume_level <= 3:
+            return ft.Icons.VOLUME_DOWN
+
+        return ft.Icons.VOLUME_UP
