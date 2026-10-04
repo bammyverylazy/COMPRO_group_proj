@@ -147,42 +147,7 @@ When the project is sent as a ZIP archive, the receiver should:
 If any images, sounds, or data do not load, check that the project was fully extracted and that the folder structure still matches the original layout.
 
 ---
-
-## 9. Before sending the project to your professor
-
-Use this checklist before submitting:
-
-- [ ] Project runs on a fresh computer after extracting the ZIP file
-- [ ] `requirements.txt` includes all required libraries
-- [ ] No personal data, local paths, or usernames are left in the code
-- [ ] No debug print statements or temporary testing code remain
-- [ ] Unused files and generated folders are removed if not needed
-- [ ] `__pycache__`, `.venv`, and build output folders are not included unless required
-- [ ] The project contains a clear `README.md` with setup instructions
-- [ ] All imports are valid and there are no obvious missing dependencies
-- [ ] Save data or local state is not incorrectly shipped as project content unless intended
-- [ ] The code is organized and readable, with consistent naming and comments only where necessary
-
----
-
-## 10. Recommended cleanup before final submission
-
-Before sending the final ZIP to your professor, it is good to do the following:
-
-1. Delete local virtual environments such as `.venv`
-2. Remove generated cache folders such as `__pycache__`
-3. Delete temporary logs or local saves if they are not part of the project design
-4. Make sure the app still runs after a clean reinstall
-5. Keep only the files that are needed for the project to work
-6. Confirm that the project is easy for someone else to run without extra setup steps
-
-A clean project should be easy to unzip, install, and run without needing hidden files or extra manual changes.
-
----
-
-## 11. Final reminder
-
-If you send the project in a ZIP file, the easiest way for a professor or reviewer to run it is:
+**simplified setup command**
 
 ```powershell
 cd path\to\extracted\folder
