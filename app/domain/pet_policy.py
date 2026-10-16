@@ -1,4 +1,3 @@
-# มันติดกับโค้ดเค้า กะเลยเขียนไว้ แก้ได้เรย (แบมแบม)
 
 class PetLevelPolicy:
     SCALE_STEP: float = 0.15

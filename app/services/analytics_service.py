@@ -24,7 +24,7 @@ class AnalyticsService:
     def session_report(self, session_id: int) -> SessionReport:
         session = self.store.sessions.get(session_id)
         if session.status not in self.FINISHED:
-            raise InvalidStateError("รอบนี้ยังไม่จบ")
+            raise InvalidStateError("This session has not finished yet")
         min_success_sec = self.settings.min_success_minutes * 60
         remaining_sec = max(0, min_success_sec - session.duration_sec) if session.status is SessionStatus.FAILED else 0
         return SessionReport(

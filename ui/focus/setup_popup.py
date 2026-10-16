@@ -11,9 +11,16 @@ from ui.core.base_widget import BaseWidget
 from ui.core.theme import Theme
 from ui.core.widgets import PixelButton
 from ui.hatch.egg_odds_panel import EggOddsPanel
+from ui.lobby.image_button import ImageButton
 
 if TYPE_CHECKING:
     from ui.core.app_context import AppContext
+
+BG_NORMAL = "#E8C88A"
+BG_HOVER = "#FFE8AD"
+BORDER_COLOR = "#6D4348"
+TEXT_COLOR = "#734547"
+FONT_PIXEL = getattr(Theme, "FONT_PIXEL", "Pixel")
 
 
 class SetupPopup(BaseWidget):
@@ -22,6 +29,7 @@ class SetupPopup(BaseWidget):
     SECTION_SIZE: ClassVar[int] = 14
     RECENT_LABEL: ClassVar[str] = "Recent subjects"
     FIELD_LABEL: ClassVar[str] = "Subject"
+    BUTTON_HEIGHT: ClassVar[float] = Theme.IMAGE_BUTTON_HEIGHT
 
     def __init__(
         self,
@@ -42,6 +50,8 @@ class SetupPopup(BaseWidget):
             label=self.FIELD_LABEL,
             autofocus=True,
             on_submit=self._on_submit,
+            text_style=ft.TextStyle(color="black", font_family=FONT_PIXEL),
+            label_style=ft.TextStyle(color="black54", font_family=FONT_PIXEL),
         )
         self.error_text = ft.Text("", color=Theme.ERROR, visible=False)
         self.odds_panel = EggOddsPanel(self.ctx.tiers.list_odds())
@@ -74,7 +84,12 @@ class SetupPopup(BaseWidget):
             return []
         label: ft.Text = ft.Text(self.RECENT_LABEL, size=self.SECTION_SIZE, color=Theme.MUTED)
         buttons: list[ft.Control] = [
-            PixelButton(subject, partial(self._fill_subject, subject), variant="secondary").control
+            PixelButton(
+                subject,
+                partial(self._fill_subject, subject),
+                variant="secondary",
+                sound=self.ctx.sound,
+            ).control
             for subject in subjects
         ]
         return [label, ft.Row(controls=buttons, wrap=True)]
@@ -88,11 +103,23 @@ class SetupPopup(BaseWidget):
             return []
 
     def _build_actions(self) -> ft.Control:
-        back_button: PixelButton = PixelButton("BACK", self.on_back, variant="secondary")
-        start_button: PixelButton = PixelButton("START", self.start)
+        back_button: PixelButton = PixelButton(
+            "BACK", self.on_back, variant="secondary", sound=self.ctx.sound
+        )
+        
+        start_button = ImageButton(
+            "buttons/startfocus_normal.PNG",
+            "buttons/startfocus_hover.PNG",
+            lambda: self.start(),
+            self.BUTTON_HEIGHT,
+            "START",
+            sound=self.ctx.sound,
+        )
+
         return ft.Row(
             controls=[back_button.control, start_button.control],
             alignment=ft.MainAxisAlignment.END,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
     def _fill_subject(self, subject: str) -> None:

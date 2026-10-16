@@ -2,7 +2,7 @@
   {
     "code": "aomsin",
     "name": "Aomsin",
-    "tier": "freshman",
+    "tier": "senior",
     "rarity": "common",
     "sprite_path": "sprites/aomsin/aomsin_front.PNG",
     "description": ""
@@ -18,7 +18,7 @@
   {
     "code": "ploy",
     "name": "Ploy",
-    "tier": "freshman",
+    "tier": "senior",
     "rarity": "rare",
     "sprite_path": "sprites/ploy/ploy_front.PNG",
     "description": ""
@@ -34,7 +34,7 @@
   {
     "code": "bam",
     "name": "Bam",
-    "tier": "senior",
+    "tier": "freshman",
     "rarity": "common",
     "sprite_path": "sprites/bam/bam_front.PNG",
     "description": ""
@@ -42,7 +42,7 @@
   {
     "code": "ihere",
     "name": "Ihere",
-    "tier": "senior",
+    "tier": "freshman",
     "rarity": "rare",
     "sprite_path": "sprites/ihere/ihere_front.PNG",
     "description": ""
@@ -50,7 +50,7 @@
   {
     "code": "janjao",
     "name": "Janjao",
-    "tier": "senior",
+    "tier": "freshman",
     "rarity": "epic",
     "sprite_path": "sprites/janjao/janjao_front.PNG",
     "description": ""
@@ -74,7 +74,7 @@
   {
     "code": "tawan",
     "name": "Tawan",
-    "tier": "professor",
+    "tier": "senior",
     "rarity": "rare",
     "sprite_path": "sprites/tawan/tawan_front.PNG",
     "description": ""

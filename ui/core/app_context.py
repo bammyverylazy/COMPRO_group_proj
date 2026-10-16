@@ -5,6 +5,7 @@ import flet as ft
 from app.config import Settings
 from app.core.clock import Clock
 from app.data.game_store import GameStore
+from app.data.save_file import MemorySaveFile, SaveFile
 from app.dto import PlayerDTO
 from app.errors import InvalidStateError
 from app.services.analytics_service import AnalyticsService
@@ -35,11 +36,24 @@ class AppContext:
         self.dex = DexService(store)
         self.analytics = AnalyticsService(store, settings)
         self.sound = SoundManager(page)
+        self.sound.load("landing_lobby", "audio/landing-lobby.mp3")
+        self.sound.load("focus", "audio/focus.mp3")
+        self.sound.load_effect("click", "audio/click.mp3")
+        self.sound.load_effect("hover", "audio/hover.mp3")
+        self.sound.load_effect("spinningbeat", "audio/spinningbeat.mp3")
+        self.sound.load_effect("hatch", "audio/hatch.mp3")
+        self.sound.load_effect("result", "audio/result.mp3")
+        self.sound.load_effect("fail", "audio/fail.mp3")
         self.nav = Navigator(self)
 
     @classmethod
-    def create(cls, page: ft.Page, settings: Settings) -> AppContext:
-        store = GameStore.open(settings)
+    def create(
+        cls,
+        page: ft.Page,
+        settings: Settings,
+        save_file: SaveFile | MemorySaveFile | None = None,
+    ) -> AppContext:
+        store = GameStore.open(settings, save_file)
         return cls(page, settings, store)
 
     def require_player(self) -> PlayerDTO:

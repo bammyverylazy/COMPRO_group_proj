@@ -40,10 +40,10 @@ class PlayerService:
 
     def _validate_nickname(self, nickname: str) -> None:
         if not nickname:
-            raise ValidationError("กรุณาใส่ชื่อเล่น", field="nickname")
+            raise ValidationError("Please enter a nickname", field="nickname")
         if len(nickname) > self.MAX_NICKNAME_LENGTH:
             raise ValidationError(
-                f"ชื่อเล่นยาวได้ไม่เกิน {self.MAX_NICKNAME_LENGTH} ตัวอักษร", field="nickname")
+                f"Nickname must be at most {self.MAX_NICKNAME_LENGTH} characters", field="nickname")
         if self.store.players.find_by_nickname(nickname) is not None:
             raise ValidationError(
-                f"มีชื่อเล่น {nickname} แล้ว", field="nickname")
+                f"Nickname {nickname} is already taken", field="nickname")

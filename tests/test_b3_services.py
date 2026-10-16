@@ -87,7 +87,7 @@ def test_stop_after_30_minutes_ready(app):
     app["clock"].advance(30)
     result = app["focus"].stop(session.id)
     assert result.status is SessionStatus.READY_TO_HATCH
-    assert result.tier_odds == {EggTier.FRESHMAN: 55, EggTier.SENIOR: 35, EggTier.PROFESSOR: 10}
+    assert result.tier_odds == {EggTier.FRESHMAN: 35, EggTier.SENIOR: 45, EggTier.PROFESSOR: 20}
 
 
 def test_recent_subjects_unique_latest_first(app):

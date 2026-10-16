@@ -6,6 +6,7 @@ from typing import Callable
 import flet as ft
 
 from ui.core.base_widget import BaseWidget
+from ui.core.sound_manager import SoundManager
 from ui.core.theme import Theme
 
 
@@ -16,43 +17,100 @@ class HowToSlide:
 
 
 class HowToPopup(BaseWidget):
-    def __init__(self, slides: list[HowToSlide], on_close: Callable[[], None]) -> None:
+    WIDTH: int = Theme.CONTENT_WIDTH
+    IMAGE_WIDTH: int = 240
+    IMAGE_HEIGHT: int = 160
+    CARD_COLOR: str = "#FFF8EC"
+    BORDER_COLOR: str = "#6D4348"
+    TITLE_COLOR: str = "#734547"
+    BORDER_WIDTH: int = 3
+    OVERLAY_COLOR: str = ft.Colors.with_opacity(0.6, ft.Colors.BLACK)
+    
+    def __init__(
+        self,
+        slides: list[HowToSlide],
+        on_close: Callable[[], None],
+        sound: SoundManager,
+    ) -> None:
         super().__init__()
         self.slides = slides
         self.on_close = on_close
+        self.sound = sound
         self.current_index = 0
-        self._image = ft.Image(src=self.slides[0].image_path, height=200)
+        self._image = ft.Image(
+            src=self.slides[0].image_path,
+            width=self.IMAGE_WIDTH,
+            height=self.IMAGE_HEIGHT,
+            fit=ft.BoxFit.COVER,
+        )
         self._text = ft.Text(
             self.slides[0].text,
-            size=16,
+            size=Theme.BODY_SIZE,
             color=Theme.TEXT,
             text_align=ft.TextAlign.CENTER,
         )
         self._counter = ft.Text(f"1/{len(self.slides)}", color=Theme.MUTED)
 
     def build(self) -> ft.Control:
+        image_frame = ft.Container(
+            content=self._image,
+            width=self.IMAGE_WIDTH,
+            height=self.IMAGE_HEIGHT,
+            alignment=ft.Alignment.CENTER,
+            border_radius=8,
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        )
+        close_button = ft.IconButton(
+            icon=ft.Icons.CLOSE,
+            icon_color=self.TITLE_COLOR,
+            on_click=lambda _: self.on_close(),
+        )
+        previous_button = ft.TextButton("Previous", on_click=lambda _: self.prev())
+        next_button = ft.TextButton("Next", on_click=lambda _: self.next())
+        for button in (close_button, previous_button, next_button):
+            self.sound.bind_button(button)
+
+        return ft.Column(
+            [
+                ft.Row(
+                    [
+                        ft.Text("HOW TO PLAY", size=Theme.HEADING_SIZE, weight=ft.FontWeight.BOLD, color=self.TITLE_COLOR),
+                        close_button,
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+                image_frame,
+                self._text,
+                ft.Row(
+                    [
+                        previous_button,
+                        self._counter,
+                        next_button,
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            tight=True,
+            spacing=Theme.SPACING,
+        )
+
+    def as_overlay(self) -> ft.Container:
+        card = ft.Container(
+            content=self.control,
+            width=self.WIDTH,
+            bgcolor=self.CARD_COLOR,
+            border=ft.Border.all(self.BORDER_WIDTH, self.BORDER_COLOR),
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
+            shadow=ft.BoxShadow(blur_radius=24, color=ft.Colors.with_opacity(0.25, ft.Colors.BLACK)),
+        )
         return ft.Container(
-            bgcolor=Theme.BACKGROUND,
-            border_radius=16,
-            padding=20,
-            content=ft.Column(
-                [
-                    ft.Row(
-                        [ft.IconButton(icon=ft.Icons.CLOSE, on_click=lambda _: self.on_close())],
-                        alignment=ft.MainAxisAlignment.END,
-                    ),
-                    self._image,
-                    self._text,
-                    ft.Row(
-                        [
-                            ft.TextButton("Previous", on_click=lambda _: self.prev()),
-                            self._counter,
-                            ft.TextButton("Next", on_click=lambda _: self.next()),
-                        ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
-                ]
-            ),
+            content=card,
+            bgcolor=self.OVERLAY_COLOR,
+            alignment=ft.Alignment.CENTER,
+            padding=Theme.PAGE_PADDING,
+            expand=True,
         )
 
     def next(self) -> None:
@@ -76,16 +134,15 @@ class HowToPopup(BaseWidget):
     def default_slides() -> list[HowToSlide]:
         return [
             HowToSlide(
-                image_path="eggs/freshman.png",
+                image_path="howto/step1.png",
                 text="Study for at least 15 minutes to earn an egg.",
             ),
             HowToSlide(
-                image_path="eggs/senior.png",
+                image_path="howto/step2.png",
                 text="The longer you study, the higher the chance to get higher tier eggs.",
             ),
             HowToSlide(
-                image_path="eggs/professor.png",
+                image_path="howto/step3.png",
                 text="Hatch eggs to collect rare characters in your CPE Dex.",
             ),
         ]
-

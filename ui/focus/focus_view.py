@@ -11,6 +11,7 @@ from app.errors import AppError
 from ui.core.base_view import BaseView
 from ui.core.format import Format
 from ui.core.theme import Theme
+from ui.core.volume_control import VolumeControl
 from ui.core.widgets import ConfirmDialog, PixelButton
 from ui.focus.cpego_bot import CpegoBot, CpegoMessage
 from ui.focus.cpego_bubble import CpegoBubble
@@ -27,13 +28,13 @@ class FocusView(BaseView):
     LOBBY_ROUTE: ClassVar[str] = "/lobby"
     HATCH_ROUTE: ClassVar[str] = "/hatch"
     RESULT_ROUTE: ClassVar[str] = "/result"
-    BACKGROUND_PATH: ClassVar[str] = "focus/bg.png"
-    TIME_SIZE: ClassVar[int] = 72
-    SUBJECT_SIZE: ClassVar[int] = 22
-    PANEL_WIDTH: ClassVar[int] = 420
-    SPACING: ClassVar[int] = 16
-    BUBBLE_MARGIN: ClassVar[int] = 16
-    INITIAL_TIME: ClassVar[str] = "0:00"
+    BACKGROUND_PATH: ClassVar[str] = "backgrounds/focus_background.png"
+    TIME_SIZE: ClassVar[int] = Theme.CLOCK_SIZE
+    SUBJECT_SIZE: ClassVar[int] = Theme.HEADING_SIZE
+    PANEL_WIDTH: ClassVar[int] = Theme.CONTENT_WIDTH
+    SPACING: ClassVar[int] = Theme.SPACING
+    BUBBLE_MARGIN: ClassVar[int] = Theme.PAGE_PADDING
+    INITIAL_TIME: ClassVar[str] = "00:00"
     CONFIRM_TITLE: ClassVar[str] = "Stop studying? If you have not reached the minimum time, you will not get an egg."
 
     def __init__(self, ctx: AppContext, **params: Any) -> None:
@@ -47,24 +48,41 @@ class FocusView(BaseView):
         self.bot: CpegoBot | None = None
         self.bubble: CpegoBubble | None = None
         self.confirm: ConfirmDialog | None = None
+        self.volume_control: VolumeControl | None = None
 
     def build(self) -> ft.Control:
         brackets: list[TierOdds] = self.ctx.tiers.list_odds()
-        self.subject_text = ft.Text("", size=self.SUBJECT_SIZE, color=Theme.TEXT)
+        self.subject_text = ft.Text("", size=self.SUBJECT_SIZE, color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
         self.time_text = ft.Text(
             self.INITIAL_TIME,
             size=self.TIME_SIZE,
             weight=ft.FontWeight.BOLD,
-            color=Theme.TEXT,
+            color=ft.Colors.WHITE,
         )
         self.egg_view = EggView()
-        self.odds_panel = EggOddsPanel(brackets)
+        self.odds_panel = EggOddsPanel(brackets, text_color=ft.Colors.WHITE)
         self.bot = CpegoBot(brackets)
         self.bubble = CpegoBubble()
-        self.confirm = ConfirmDialog(self.CONFIRM_TITLE, on_yes=self.confirm_stop)
-        background: ft.Image = ft.Image(src=self.BACKGROUND_PATH, fit=ft.BoxFit.COVER, expand=True)
+        self.confirm = ConfirmDialog(
+            self.CONFIRM_TITLE,
+            on_yes=self.confirm_stop,
+            sound=self.ctx.sound,
+        )
+        self.volume_control = VolumeControl(self.ctx.sound)
+
+        background: ft.Image = ft.Image(
+            src=self.BACKGROUND_PATH,
+            fit=ft.BoxFit.COVER,
+            width=float("inf"),
+            height=float("inf"),
+        )
         return ft.Stack(
-            controls=[background, self._build_content(), self._build_bubble_slot()],
+            controls=[
+                background,
+                self._build_content(),
+                self._build_bubble_slot(),
+                self._build_volume_bar(),
+            ],
             expand=True,
         )
 
@@ -108,19 +126,35 @@ class FocusView(BaseView):
         self.ctx.nav.go(route, session_id=result.session_id)
 
     def _build_content(self) -> ft.Control:
-        stop_button: PixelButton = PixelButton("STOP", self.ask_stop, variant="danger")
-        return ft.Column(
-            controls=[
-                self.subject_text,
-                self.time_text,
-                self.egg_view.control,
-                ft.Container(content=self.odds_panel.control, width=self.PANEL_WIDTH),
-                stop_button.control,
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=self.SPACING,
-            expand=True,
+        stop_button: PixelButton = PixelButton(
+            "STOP", self.ask_stop, variant="danger", sound=self.ctx.sound
+        )
+        panel = ft.Container(
+            content=ft.Column(
+                controls=[
+                    self.subject_text,
+                    self.time_text,
+                    self.egg_view.control,
+                    ft.Container(content=self.odds_panel.control, width=self.PANEL_WIDTH),
+                    stop_button.control,
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=self.SPACING,
+                tight=True,
+                scroll=ft.ScrollMode.AUTO,
+            ),
+            bgcolor=Theme.PANEL_COLOR,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
+        )
+        return ft.Container(
+            content=panel,
+            alignment=ft.Alignment.CENTER,
+            padding=Theme.PAGE_PADDING,
+            left=0,
+            right=0,
+            top=0,
+            bottom=0,
         )
 
     def _build_bubble_slot(self) -> ft.Control:
@@ -128,6 +162,13 @@ class FocusView(BaseView):
             content=self.bubble.control,
             right=self.BUBBLE_MARGIN,
             bottom=self.BUBBLE_MARGIN,
+        )
+
+    def _build_volume_bar(self) -> ft.Control:
+        return ft.Container(
+            content=self.volume_control.control,
+            right=16,
+            top=18,
         )
 
     def _load_session(self) -> SessionDTO | None:

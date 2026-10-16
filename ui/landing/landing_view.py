@@ -7,7 +7,7 @@ from app.dto import PlayerDTO
 from app.errors import ValidationError
 from ui.core.base_view import BaseView
 from ui.core.theme import Theme
-from ui.core.widgets import PixelButton
+from ui.core.volume_control import VolumeControl
 from ui.landing.howto_popup import HowToPopup
 from ui.landing.player_picker import PlayerPicker
 
@@ -23,6 +23,8 @@ class LandingView(BaseView):
         super().__init__(ctx, **params)
         self.picker: PlayerPicker | None = None
         self.howto: HowToPopup | None = None
+        self._howto_overlay: ft.Control | None = None
+        self.volume_control: VolumeControl | None = None
         self._howto_img = ft.Image(
             src="buttons/howto_normal.PNG",
             height=50,
@@ -35,7 +37,9 @@ class LandingView(BaseView):
             players=players,
             on_pick=self.pick_player,
             on_create=self.create_player,
+            sound=self.ctx.sound,
         )
+        self.volume_control = VolumeControl(self.ctx.sound)
 
         howto_button = ft.Container(
             content=self._howto_img,
@@ -45,12 +49,13 @@ class LandingView(BaseView):
             border_radius=8,
             alignment=ft.Alignment(0, 0),
         )
+        self.ctx.sound.bind_button(howto_button)
 
         picker_card = ft.Container(
             content=self.picker.control,
-            bgcolor="black54",
-            border_radius=16,
-            padding=20,
+            bgcolor=Theme.PANEL_COLOR,
+            border_radius=Theme.PANEL_RADIUS,
+            padding=Theme.PANEL_PADDING,
         )
 
         return ft.Stack(
@@ -62,7 +67,7 @@ class LandingView(BaseView):
                     height=float("inf"),
                 ),
                 ft.Container(
-                    padding=24,
+                    padding=Theme.PAGE_PADDING,
                     alignment=ft.Alignment(0, 0),
                     content=ft.Column(
                         [
@@ -76,15 +81,19 @@ class LandingView(BaseView):
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=20,
+                        spacing=Theme.SPACING,
                     ),
+                ),
+                ft.Container(
+                    content=self.volume_control.control,
+                    right=8,
+                    top=4,
                 ),
             ],
             expand=True,
         )
 
     def _on_howto_hover(self, e: ft.ControlEvent) -> None:
-        """สลับรูปภาพปุ่ม HOW TO เมื่อเมาส์ชี้เข้า-ออก"""
         is_hovered = e.data == "true" or e.data is True
         self._howto_img.src = (
             "buttons/howto_hover.PNG" if is_hovered else "buttons/howto_normal.PNG"
@@ -107,15 +116,19 @@ class LandingView(BaseView):
     def open_howto(self) -> None:
         def close_howto() -> None:
             if (
-                self.howto is not None
-                and self.howto.control in self.ctx.page.overlay
+                self._howto_overlay is not None
+                and self._howto_overlay in self.ctx.page.overlay
             ):
-                self.ctx.page.overlay.remove(self.howto.control)
+                self.ctx.page.overlay.remove(self._howto_overlay)
                 self.ctx.page.update()
-                self.howto = None
+            self.howto = None
+            self._howto_overlay = None
 
         self.howto = HowToPopup(
-            slides=HowToPopup.default_slides(), on_close=close_howto
+            slides=HowToPopup.default_slides(),
+            on_close=close_howto,
+            sound=self.ctx.sound,
         )
-        self.ctx.page.overlay.append(self.howto.control)
+        self._howto_overlay = self.howto.as_overlay()
+        self.ctx.page.overlay.append(self._howto_overlay)
         self.ctx.page.update()

@@ -20,10 +20,10 @@ class FocusSessionService:
     def start(self, player_id: int, subject: str, room_id: int | None = None) -> SessionDTO:
         clean_subject = subject.strip()
         if not clean_subject:
-            raise ValidationError("กรุณาใส่ชื่อวิชา", field="subject")
+            raise ValidationError("Please enter a subject", field="subject")
         self.store.players.get(player_id)
         if self.store.sessions.get_running(player_id) is not None:
-            raise InvalidStateError("ผู้เล่นมีรอบที่อ่านค้างอยู่")
+            raise InvalidStateError("This player already has a session in progress")
         session = StudySession(
             id=self.store.sessions.next_id(),
             player_id=player_id,
@@ -48,7 +48,7 @@ class FocusSessionService:
     def stop(self, session_id: int) -> StopResult:
         session = self.store.sessions.get(session_id)
         if not session.is_running():
-            raise InvalidStateError("รอบนี้หยุดไปแล้ว")
+            raise InvalidStateError("This session has already stopped")
         duration_sec = self.clock.elapsed_sec(session.started_at)
         status = session.stop(self.clock.now(), duration_sec, self._min_success_sec())
         self.store.save()

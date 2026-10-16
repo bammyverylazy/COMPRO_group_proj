@@ -21,7 +21,7 @@ class EggOddsPanel(BaseWidget):
     SECONDS_PER_MINUTE: ClassVar[int] = 60
     LABEL_FLEX: ClassVar[int] = 3
     CELL_FLEX: ClassVar[int] = 2
-    FONT_SIZE: ClassVar[int] = 14
+    FONT_SIZE: ClassVar[int] = Theme.BODY_SIZE
     ROW_PADDING: ClassVar[int] = 8
     ROW_SPACING: ClassVar[int] = 2
     RADIUS: ClassVar[int] = 6
@@ -29,12 +29,13 @@ class EggOddsPanel(BaseWidget):
     HEADER_LABEL: ClassVar[str] = "Study time"
     NO_EGG_TEXT: ClassVar[str] = "No egg"
 
-    def __init__(self, brackets: list[TierOdds], current_sec: int = 0) -> None:
+    def __init__(self, brackets: list[TierOdds], current_sec: int = 0, text_color: str = Theme.TEXT) -> None:
         super().__init__()
         if not brackets:
             raise ValidationError("No egg odds table", field="brackets")
         self.brackets: list[TierOdds] = brackets
         self.current_sec: int = current_sec
+        self.text_color: str = text_color
         self._rows: list[ft.Container] = []
 
     def build(self) -> ft.Control:
@@ -70,7 +71,7 @@ class EggOddsPanel(BaseWidget):
     def _build_row(self, label: str, cells: list[str], bold: bool = False) -> ft.Container:
         weight: ft.FontWeight = ft.FontWeight.BOLD if bold else ft.FontWeight.NORMAL
         controls: list[ft.Control] = [
-            ft.Text(label, size=self.FONT_SIZE, weight=weight, color=Theme.TEXT, expand=self.LABEL_FLEX)
+            ft.Text(label, size=self.FONT_SIZE, weight=weight, color=self.text_color, expand=self.LABEL_FLEX)
         ]
         controls.extend(self._build_cell(cell, weight) for cell in cells)
         return ft.Container(
@@ -84,7 +85,7 @@ class EggOddsPanel(BaseWidget):
             text,
             size=self.FONT_SIZE,
             weight=weight,
-            color=Theme.TEXT,
+            color=self.text_color,
             text_align=ft.TextAlign.CENTER,
             expand=self.CELL_FLEX,
         )
